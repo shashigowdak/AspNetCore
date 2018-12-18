@@ -11,12 +11,12 @@ namespace Microsoft.AspNetCore.Builder
     {
         public DefaultEndpointConventionBuilder()
         {
-            Conventions = new List<Action<EndpointBuilder>>();
+            Conventions = new List<Action<EndpointModel>>();
         }
 
-        public List<Action<EndpointBuilder>> Conventions { get; }
+        public List<Action<EndpointModel>> Conventions { get; }
 
-        public void Add(Action<EndpointBuilder> convention)
+        public void Apply(Action<EndpointModel> convention)
         {
             Conventions.Add(convention);
         }

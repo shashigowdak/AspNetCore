@@ -269,7 +269,7 @@ namespace Microsoft.AspNetCore.Mvc.Routing
             RouteValueDictionary dataTokens,
             bool suppressLinkGeneration,
             bool suppressPathMatching,
-            List<Action<EndpointBuilder>> conventions)
+            List<Action<EndpointModel>> conventions)
         {
             RequestDelegate requestDelegate = (context) =>
             {
@@ -281,7 +281,7 @@ namespace Microsoft.AspNetCore.Mvc.Routing
                 return invoker.InvokeAsync();
             };
 
-            var endpointBuilder = new RouteEndpointBuilder(requestDelegate, routePattern, order);
+            var endpointBuilder = new RouteEndpointModel(requestDelegate, routePattern, order);
             AddEndpointMetadata(
                 endpointBuilder.Metadata,
                 action,
