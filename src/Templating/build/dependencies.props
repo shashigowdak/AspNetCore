@@ -15,6 +15,7 @@
     <MicrosoftAspNetCoreIdentityUIPackageVersion>3.0.0-preview-18628-0228</MicrosoftAspNetCoreIdentityUIPackageVersion>
     <MicrosoftAspNetCorePackageVersion>3.0.0-preview-18628-0228</MicrosoftAspNetCorePackageVersion>
     <MicrosoftAspNetCoreMvcNewtonsoftJsonPackageVersion>3.0.0-preview-18628-0228</MicrosoftAspNetCoreMvcNewtonsoftJsonPackageVersion>
+    <MicrosoftAspNetCoreRoutingPackageVersion>3.0.0-preview-18628-0229</MicrosoftAspNetCoreRoutingPackageVersion>
     <MicrosoftAspNetCoreServerIntegrationTestingPackageVersion>0.6.0-rtm-final</MicrosoftAspNetCoreServerIntegrationTestingPackageVersion>
     <MicrosoftAspNetCoreSpaServicesExtensionsPackageVersion>3.0.0-preview-18628-0228</MicrosoftAspNetCoreSpaServicesExtensionsPackageVersion>
     <MicrosoftAspNetCoreTestingPackageVersion>3.0.0-preview-181113-11</MicrosoftAspNetCoreTestingPackageVersion>
