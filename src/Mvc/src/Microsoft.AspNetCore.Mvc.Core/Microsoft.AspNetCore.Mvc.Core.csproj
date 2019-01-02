@@ -27,6 +27,7 @@ Microsoft.AspNetCore.Mvc.RouteAttribute</Description>
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Microsoft.AspNetCore.Cors" />
     <Reference Include="Microsoft.AspNetCore.Mvc.Abstractions" />
     <Reference Include="Microsoft.AspNetCore.Authentication.Core" />
     <Reference Include="Microsoft.AspNetCore.Authorization.Policy" />
@@ -39,9 +40,12 @@ Microsoft.AspNetCore.Mvc.RouteAttribute</Description>
     <Reference Include="Microsoft.Extensions.DependencyInjection" />
     <Reference Include="Microsoft.Extensions.DependencyModel" />
     <Reference Include="Microsoft.Extensions.FileProviders.Abstractions" />
+    <Reference Include="Microsoft.Extensions.Localization" />
     <Reference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <Reference Include="System.ComponentModel.Annotations" />
     <Reference Include="System.Diagnostics.DiagnosticSource" />
     <Reference Include="System.Threading.Tasks.Extensions" />
+
   </ItemGroup>
 
   <ItemGroup Label="Sources packages">

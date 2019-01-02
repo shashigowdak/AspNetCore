@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Core.Test.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Testing;
@@ -177,7 +178,7 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations
             var attribute = new CompareAttribute("OtherProperty")
             {
                 ErrorMessageResourceName = "CompareAttributeTestResource",
-                ErrorMessageResourceType = typeof(DataAnnotations.Test.Resources),
+                ErrorMessageResourceType = typeof(Resources),
             };
             var adapter = new CompareAttributeAdapter(attribute, stringLocalizer: null);
 

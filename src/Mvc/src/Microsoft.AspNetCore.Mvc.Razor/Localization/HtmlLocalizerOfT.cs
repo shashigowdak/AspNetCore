@@ -13,7 +13,7 @@ namespace Microsoft.AspNetCore.Mvc.Localization
     /// <typeparamref name="TResource"/>.
     /// </summary>
     /// <typeparam name="TResource">The <see cref="Type"/> to scope the resource names.</typeparam>
-    public class HtmlLocalizer<TResource> : IHtmlLocalizer<TResource>
+    internal class HtmlLocalizer<TResource> : IHtmlLocalizer<TResource>
     {
         private readonly IHtmlLocalizer _localizer;
 

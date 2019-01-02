@@ -490,4 +490,10 @@
   <data name="ApiConventions_Title_422" xml:space="preserve">
     <value>Unprocessable Entity</value>
   </data>
+  <data name="CorsAuthorizationFilter_MissingCorsPolicy" xml:space="preserve">
+    <value>A CORS policy named '{0}' could not be found.</value>
+  </data>
+  <data name="ValidatableObjectAdapter_IncompatibleType" xml:space="preserve">
+    <value>The model object inside the metadata claimed to be compatible with '{0}', but was actually '{1}'.</value>
+  </data>
 </root>

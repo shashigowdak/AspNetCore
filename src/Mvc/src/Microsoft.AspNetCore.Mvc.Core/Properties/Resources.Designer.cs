@@ -1690,6 +1690,34 @@ namespace Microsoft.AspNetCore.Mvc.Core
         internal static string FormatApiConventions_Title_422()
             => GetString("ApiConventions_Title_422");
 
+        /// <summary>
+        /// A CORS policy named '{0}' could not be found.
+        /// </summary>
+        internal static string CorsAuthorizationFilter_MissingCorsPolicy
+        {
+            get => GetString("CorsAuthorizationFilter_MissingCorsPolicy");
+        }
+
+        /// <summary>
+        /// A CORS policy named '{0}' could not be found.
+        /// </summary>
+        internal static string FormatCorsAuthorizationFilter_MissingCorsPolicy(object p0)
+            => string.Format(CultureInfo.CurrentCulture, GetString("CorsAuthorizationFilter_MissingCorsPolicy"), p0);
+
+        /// <summary>
+        /// The model object inside the metadata claimed to be compatible with '{0}', but was actually '{1}'.
+        /// </summary>
+        internal static string ValidatableObjectAdapter_IncompatibleType
+        {
+            get => GetString("ValidatableObjectAdapter_IncompatibleType");
+        }
+
+        /// <summary>
+        /// The model object inside the metadata claimed to be compatible with '{0}', but was actually '{1}'.
+        /// </summary>
+        internal static string FormatValidatableObjectAdapter_IncompatibleType(object p0, object p1)
+            => string.Format(CultureInfo.CurrentCulture, GetString("ValidatableObjectAdapter_IncompatibleType"), p0, p1);
+
         private static string GetString(string name, params string[] formatterNames)
         {
             var value = _resourceManager.GetString(name);

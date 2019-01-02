@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using Microsoft.AspNetCore.Mvc.Core.Test.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -405,7 +406,7 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations
                 Name = nameof(Test.Resources.DisplayAttribute_Name),
                 ResourceType = typeof(Test.Resources),
 #else
-                Name = nameof(DataAnnotations.Test.Resources.DisplayAttribute_Name),
+                Name = nameof(Resources.DisplayAttribute_Name),
                 ResourceType = typeof(TestResources),
 #endif
             };
@@ -442,7 +443,7 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations
                 Name = nameof(Test.Resources.DisplayAttribute_Name),
                 ResourceType = typeof(Test.Resources),
 #else
-                Name = nameof(DataAnnotations.Test.Resources.DisplayAttribute_Name),
+                Name = nameof(Resources.DisplayAttribute_Name),
                 ResourceType = typeof(TestResources),
 #endif
             };
@@ -479,7 +480,7 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations
                 Description = nameof(Test.Resources.DisplayAttribute_Description),
                 ResourceType = typeof(Test.Resources),
 #else
-                Description = nameof(DataAnnotations.Test.Resources.DisplayAttribute_Description),
+                Description = nameof(Resources.DisplayAttribute_Description),
                 ResourceType = typeof(TestResources),
 #endif
             };
@@ -510,7 +511,7 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations
                 Description = nameof(Test.Resources.DisplayAttribute_Description),
                 ResourceType = typeof(Test.Resources),
 #else
-                Description = nameof(DataAnnotations.Test.Resources.DisplayAttribute_Description),
+                Description = nameof(Resources.DisplayAttribute_Description),
                 ResourceType = typeof(TestResources),
 #endif
             };
@@ -547,7 +548,7 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations
                 Prompt = nameof(Test.Resources.DisplayAttribute_Prompt),
                 ResourceType = typeof(Test.Resources),
 #else
-                Prompt = nameof(DataAnnotations.Test.Resources.DisplayAttribute_Prompt),
+                Prompt = nameof(Resources.DisplayAttribute_Prompt),
                 ResourceType = typeof(TestResources),
 #endif
             };
@@ -578,7 +579,7 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations
                 Prompt = nameof(Test.Resources.DisplayAttribute_Prompt),
                 ResourceType = typeof(Test.Resources),
 #else
-                Prompt = nameof(DataAnnotations.Test.Resources.DisplayAttribute_Prompt),
+                Prompt = nameof(Resources.DisplayAttribute_Prompt),
                 ResourceType = typeof(TestResources),
 #endif
             };

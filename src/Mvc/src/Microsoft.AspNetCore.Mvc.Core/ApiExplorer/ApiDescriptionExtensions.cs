@@ -24,8 +24,7 @@ namespace Microsoft.AspNetCore.Mvc.ApiExplorer
                 throw new ArgumentNullException(nameof(apiDescription));
             }
 
-            object value;
-            if (apiDescription.Properties.TryGetValue(typeof(T), out value))
+            if (apiDescription.Properties.TryGetValue(typeof(T), out var value))
             {
                 return (T)value;
             }
