@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Templates.Test.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -22,16 +23,14 @@ namespace Templates.Test
     {
         private readonly ITestOutputHelper _output;
         private readonly HttpClient _httpClient;
-        private static readonly string _solutionDir;
         private static readonly string _artifactsDir;
         private static List<ScriptTag> _scriptTags;
         private static List<LinkTag> _linkTags;
 
         static CdnScriptTagTests()
         {
-            _solutionDir = GetSolutionDir();
-            _artifactsDir = Path.Combine(_solutionDir, "artifacts", "build");
-            var packages = Directory.GetFiles(_artifactsDir, "*.nupkg");
+            _artifactsDir = AspNetProcess.GetPackageDirectory();
+            var packages = Directory.GetFiles(_artifactsDir, "Microsoft.DotNet.Web.*.nupkg");
 
             _scriptTags = new List<ScriptTag>();
             _linkTags = new List<LinkTag>();
@@ -109,32 +108,6 @@ namespace Templates.Test
             }
         }
 
-        public static IEnumerable<object[]> FallbackSrcCheckData
-        {
-            get
-            {
-                var scriptTags = _scriptTags
-                    .Where(st => st.FallbackSrc != null)
-                    .Select(st => new object[] { st });
-                Assert.NotEmpty(scriptTags);
-                return scriptTags;
-            }
-        }
-
-        [Theory]
-        [MemberData(nameof(FallbackSrcCheckData))]
-        public async Task FallbackSrcContent_Matches_CDNContent(ScriptTag scriptTag)
-        {
-            var fallbackSrc = scriptTag.FallbackSrc
-                .TrimStart('~')
-                .TrimStart('/');
-
-            var cdnContent = await _httpClient.GetStringAsync(scriptTag.Src);
-            var fallbackSrcContent = GetFileContentFromArchive(scriptTag, fallbackSrc);
-
-            Assert.Equal(RemoveLineEndings(cdnContent), RemoveLineEndings(fallbackSrcContent));
-        }
-
         public struct LinkTag
         {
             public string Rel;
@@ -160,26 +133,6 @@ namespace Templates.Test
             {
                 return $"{Src}, {Entry}";
             }
-        }
-
-        private static string GetFileContentFromArchive(ScriptTag scriptTag, string relativeFilePath)
-        {
-            var file = Path.Combine(_artifactsDir, scriptTag.FileName);
-            using (var zip = new ZipArchive(File.OpenRead(file), ZipArchiveMode.Read, leaveOpen: false))
-            {
-                var entry = zip.Entries
-                    .Where(e => e.FullName.EndsWith(relativeFilePath, StringComparison.OrdinalIgnoreCase))
-                    .FirstOrDefault();
-
-                if (entry != null)
-                {
-                    using (var reader = new StreamReader(entry.Open()))
-                    {
-                        return reader.ReadToEnd();
-                    }
-                }
-            }
-            return null;
         }
 
         private static (List<ScriptTag> scripts, List<LinkTag> links) GetTags(string zipFile)
@@ -236,20 +189,6 @@ namespace Templates.Test
                 }
             }
             return (scriptTags, linkTags);
-        }
-
-        private static string GetSolutionDir()
-        {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null)
-            {
-                if (File.Exists(Path.Combine(dir.FullName, "Templating.sln")))
-                {
-                    break;
-                }
-                dir = dir.Parent;
-            }
-            return dir.FullName;
         }
 
         private static string RemoveLineEndings(string originalString)

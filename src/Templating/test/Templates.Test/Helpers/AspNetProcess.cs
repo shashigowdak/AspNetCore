@@ -112,6 +112,32 @@ namespace Templates.Test.Helpers
             }
         }
 
+        public static string GetPackageDirectory()
+        {
+#if DEBUG
+            var config = "Debug";
+#else
+            var config = "Release";
+#endif
+            var solutionDir = GetSolutionDir();
+            return Path.Combine(solutionDir, "..", "..", "artifacts", config, "packages", "product");
+        }
+
+        private static string GetSolutionDir()
+        {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null)
+            {
+                if (File.Exists(Path.Combine(dir.FullName, "Templating.sln")))
+                {
+                    break;
+                }
+                dir = dir.Parent;
+            }
+
+            return dir.FullName;
+        }
+
         private Uri GetListeningUri(ITestOutputHelper output)
         {
             // Wait until the app is accepting HTTP requests

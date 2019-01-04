@@ -1,8 +1,9 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using OpenQA.Selenium;
 using System.IO;
+using System.Linq;
 using System.Net;
 using Templates.Test.Helpers;
 using Templates.Test.Infrastructure;
@@ -43,6 +44,7 @@ namespace Templates.Test.SpaTemplateTest
 
             TestApplication(publish: false);
             TestApplication(publish: true);
+            AssertLogsOk();
         }
 
         private void TestApplication(bool publish)
@@ -57,6 +59,20 @@ namespace Templates.Test.SpaTemplateTest
                     TestBasicNavigation();
                 }
             }
+        }
+
+        private void AssertLogsOk()
+        {
+            var logs = Browser.Manage().Logs.GetLog("browser");
+
+            var badLogs = logs.Where(l => l.Level >= LogLevel.Warning);
+
+            foreach (var badLog in badLogs)
+            {
+                Output.WriteLine($"[{badLog.Timestamp}] - {badLog.Level} - {badLog.Message}");
+            }
+
+            Assert.Empty(badLogs);
         }
 
         private void TestBasicNavigation()

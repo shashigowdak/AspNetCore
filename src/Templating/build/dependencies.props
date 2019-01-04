@@ -23,6 +23,7 @@
     <MicrosoftNETCoreApp30PackageVersion>3.0.0-preview1-26907-05</MicrosoftNETCoreApp30PackageVersion>
     <MicrosoftNETSdkRazorPackageVersion>3.0.0-preview-18579-0056</MicrosoftNETSdkRazorPackageVersion>
     <MicrosoftNETTestSdkPackageVersion>15.6.1</MicrosoftNETTestSdkPackageVersion>
+    <MicrosoftWebLibraryManagerBuildPackageVersion>1.0.172</MicrosoftWebLibraryManagerBuildPackageVersion>
     <NETStandardLibrary20PackageVersion>2.0.3</NETStandardLibrary20PackageVersion>
     <SeleniumSupportPackageVersion>3.12.1</SeleniumSupportPackageVersion>
     <SeleniumWebDriverMicrosoftDriverPackageVersion>17.17134.0</SeleniumWebDriverMicrosoftDriverPackageVersion>
