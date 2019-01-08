@@ -8,21 +8,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.reactivex.Single;
 import io.reactivex.subjects.SingleSubject;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Cookie;
-import okhttp3.CookieJar;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 
 final class DefaultHttpClient extends HttpClient {
     private final OkHttpClient client;
@@ -76,11 +68,17 @@ final class DefaultHttpClient extends HttpClient {
                     cookieLock.unlock();
                 }
             }
-        }).build();
+        }).readTimeout(10, TimeUnit.SECONDS)
+                .build();
     }
 
     @Override
     public Single<HttpResponse> send(HttpRequest httpRequest) {
+        return send(httpRequest, null);
+    }
+
+    @Override
+    public Single<HttpResponse> send(HttpRequest httpRequest, String bodyContent) {
         Request.Builder requestBuilder = new Request.Builder().url(httpRequest.getUrl());
 
         switch (httpRequest.getMethod()) {
@@ -88,7 +86,13 @@ final class DefaultHttpClient extends HttpClient {
                 requestBuilder.get();
                 break;
             case "POST":
-                RequestBody body = RequestBody.create(null, new byte[]{});
+                RequestBody body;
+                if(bodyContent != null) {
+                    body = RequestBody.create(MediaType.parse("text/plain"), bodyContent);
+                } else {
+                    body = RequestBody.create(null, new byte[]{});
+                }
+
                 requestBuilder.post(body);
                 break;
             case "DELETE":
@@ -128,6 +132,7 @@ final class DefaultHttpClient extends HttpClient {
 
         return responseSubject;
     }
+
 
     @Override
     public WebSocketWrapper createWebSocket(String url, Map<String, String> headers) {

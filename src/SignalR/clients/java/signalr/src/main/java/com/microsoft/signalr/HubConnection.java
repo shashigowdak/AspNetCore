@@ -25,6 +25,8 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.subjects.*;
 
+import static com.microsoft.signalr.TransportEnum.LONGPOLLING;
+
 /**
  * A connection used to invoke hub methods on a SignalR Server.
  */
@@ -56,6 +58,7 @@ public class HubConnection {
     private long tickRate = 1000;
     private CompletableSubject handshakeResponseSubject;
     private long handshakeResponseTimeout = 15*1000;
+    private TransportEnum transportEnum = TransportEnum.WEBSOCKETS;
     private final Logger logger = LoggerFactory.getLogger(HubConnection.class);
 
     /**
@@ -301,6 +304,15 @@ public class HubConnection {
 
         negotiate.flatMapCompletable(url -> {
             logger.debug("Starting HubConnection.");
+            if (transport == null) {
+                switch (transportEnum){
+                    case LONGPOLLING:
+                        transport = new LongPollingTransport(headers, httpClient);
+                        break;
+                    default:
+                        transport = new WebSocketTransport(headers, httpClient);
+                }
+            }
             if (transport == null) {
                 transport = new WebSocketTransport(headers, httpClient);
             }

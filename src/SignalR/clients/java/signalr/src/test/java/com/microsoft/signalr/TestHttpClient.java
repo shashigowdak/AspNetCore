@@ -26,6 +26,11 @@ class TestHttpClient extends HttpClient {
         return this.handler.invoke(request);
     }
 
+    @Override
+    public Single<HttpResponse> send(HttpRequest request, String body) {
+        return null;
+    }
+
     public List<HttpRequest> getSentRequests() {
         return sentRequests;
     }
