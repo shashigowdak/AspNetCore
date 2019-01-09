@@ -100,7 +100,7 @@ abstract class HttpClient {
         request.setUrl(url);
         request.setMethod("POST");
 
-        return this.send(request);
+        return this.send(request, body);
     }
 
     public Single<HttpResponse> post(String url, HttpRequest options) {

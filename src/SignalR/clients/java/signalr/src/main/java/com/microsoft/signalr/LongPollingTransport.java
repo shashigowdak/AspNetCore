@@ -4,6 +4,7 @@
 package com.microsoft.signalr;
 
 import io.reactivex.Completable;
+import io.reactivex.Single;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,20 +18,20 @@ public class LongPollingTransport implements Transport {
     private final Map<String, String> headers;
     private Boolean active;
     private String pollUrl;
-    private Completable receiving;
+    private Runnable receiving;
 
     private final Logger logger = LoggerFactory.getLogger(WebSocketTransport.class);
 
     public LongPollingTransport(Map<String, String> headers, HttpClient client) {
         this.headers = headers;
-        this.client = new DefaultHttpClient();
+        this.client = client;
     }
 
     @Override
     public Completable start(String url) {
         this.active = true;
         logger.info("Starting LongPolling transport");
-
+        this.url = url;
         pollUrl = url + "&_=" + System.currentTimeMillis();
         logger.info("Polling {}", pollUrl);
 
@@ -43,7 +44,7 @@ public class LongPollingTransport implements Transport {
             this.active = true;
         }
 
-        this.receiving = poll(url);
+        new Thread(() -> poll(url)).start();
 
         return Completable.complete();
     }
@@ -71,8 +72,8 @@ public class LongPollingTransport implements Transport {
 
     @Override
     public Completable send(String message) {
-        //HttpResponse response = this.client.post(url, )
-        return null;
+        this.client.post(url, message).blockingGet();
+        return Completable.complete();
     }
 
     @Override
@@ -93,6 +94,6 @@ public class LongPollingTransport implements Transport {
 
     @Override
     public Completable stop() {
-        return null;
+        return Completable.complete();
     }
 }

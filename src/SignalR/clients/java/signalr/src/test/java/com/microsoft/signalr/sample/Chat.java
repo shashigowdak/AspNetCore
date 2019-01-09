@@ -20,9 +20,9 @@ public class Chat {
 
         HubConnection hubConnection = HubConnectionBuilder.create(input).build();
 
-        hubConnection.on("Send", (name, message) -> {
-            System.out.println(name + ": " + message);
-        }, String.class, String.class);
+        hubConnection.on("Send", (message) -> {
+            System.out.println(message);
+        }, String.class);
 
         hubConnection.onClosed((ex) -> {
             if (ex != null) {
@@ -37,7 +37,7 @@ public class Chat {
         while (!message.equals("leave")) {
             // Scans the next token of the input as an int.
             message = reader.nextLine();
-            hubConnection.send("Send", enteredName, message);
+            hubConnection.send("Send", message);
         }
 
         hubConnection.stop();
