@@ -322,37 +322,40 @@ public class HubConnection {
                 String handshake = HandshakeProtocol.createHandshakeRequestMessage(
                         new HandshakeRequestMessage(protocol.getName(), protocol.getVersion()));
 
+                connectionState = new ConnectionState(this);
+
                 return transport.send(handshake).andThen(Completable.defer(() -> {
                     timeoutHandshakeResponse(handshakeResponseTimeout, TimeUnit.MILLISECONDS);
                     return handshakeResponseSubject.andThen(Completable.defer(() -> {
                         hubConnectionStateLock.lock();
                         try {
-                            connectionState = new ConnectionState(this);
                             hubConnectionState = HubConnectionState.CONNECTED;
                             logger.info("HubConnection started.");
-
                             resetServerTimeout();
-                            this.pingTimer = new Timer();
-                            this.pingTimer.schedule(new TimerTask() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        if (System.currentTimeMillis() > nextServerTimeout.get()) {
-                                            stop("Server timeout elapsed without receiving a message from the server.");
-                                            return;
-                                        }
+                            if(transportEnum != TransportEnum.LONGPOLLING) {
+                                this.pingTimer = new Timer();
+                                this.pingTimer.schedule(new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            if (System.currentTimeMillis() > nextServerTimeout.get()) {
+                                                stop("Server timeout elapsed without receiving a message from the server.");
+                                                return;
+                                            }
 
-                                        if (System.currentTimeMillis() > nextPingActivation.get()) {
-                                            sendHubMessage(PingMessage.getInstance());
+                                            if (System.currentTimeMillis() > nextPingActivation.get()) {
+                                                sendHubMessage(PingMessage.getInstance());
+                                            }
+                                        } catch (Exception e) {
+                                            logger.warn("Error sending ping: {}.", e.getMessage());
+                                            // The connection is probably in a bad or closed state now, cleanup the timer so
+                                            // it stops triggering
+                                            pingTimer.cancel();
                                         }
-                                    } catch (Exception e) {
-                                        logger.warn("Error sending ping: {}.", e.getMessage());
-                                        // The connection is probably in a bad or closed state now, cleanup the timer so
-                                        // it stops triggering
-                                        pingTimer.cancel();
                                     }
-                                }
-                            }, new Date(0), tickRate);
+                                }, new Date(0), tickRate);
+                            }
+
                         } finally {
                             hubConnectionStateLock.unlock();
                         }

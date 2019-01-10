@@ -4,7 +4,6 @@
 package com.microsoft.signalr;
 
 import io.reactivex.Completable;
-import io.reactivex.Single;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +19,7 @@ public class LongPollingTransport implements Transport {
     private String pollUrl;
     private Runnable receiving;
 
-    private final Logger logger = LoggerFactory.getLogger(WebSocketTransport.class);
+    private final Logger logger = LoggerFactory.getLogger(LongPollingTransport.class);
 
     public LongPollingTransport(Map<String, String> headers, HttpClient client) {
         this.headers = headers;
@@ -79,12 +78,12 @@ public class LongPollingTransport implements Transport {
     @Override
     public void setOnReceive(OnReceiveCallBack callback) {
         this.onReceiveCallBack = callback;
-        logger.debug("OnReceived callback has been set.");
     }
 
     @Override
     public void onReceive(String message) {
         this.onReceiveCallBack.invoke(message);
+        logger.debug("OnReceived callback has been invoked.");
     }
 
     @Override

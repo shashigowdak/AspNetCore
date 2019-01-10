@@ -68,7 +68,8 @@ final class DefaultHttpClient extends HttpClient {
                     cookieLock.unlock();
                 }
             }
-        }).build();
+        }).readTimeout(100, TimeUnit.SECONDS)
+                .build();
     }
 
     @Override
