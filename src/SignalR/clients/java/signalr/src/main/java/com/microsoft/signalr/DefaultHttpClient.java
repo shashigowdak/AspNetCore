@@ -20,6 +20,10 @@ final class DefaultHttpClient extends HttpClient {
     private final OkHttpClient client;
 
     public DefaultHttpClient() {
+        this(5);
+    }
+
+    public DefaultHttpClient(int pollTimeout) {
         this.client = new OkHttpClient.Builder().cookieJar(new CookieJar() {
             private List<Cookie> cookieList = new ArrayList<>();
             private Lock cookieLock = new ReentrantLock();
@@ -68,7 +72,7 @@ final class DefaultHttpClient extends HttpClient {
                     cookieLock.unlock();
                 }
             }
-        }).readTimeout(100, TimeUnit.SECONDS)
+        }).readTimeout(pollTimeout, TimeUnit.MILLISECONDS)
                 .build();
     }
 

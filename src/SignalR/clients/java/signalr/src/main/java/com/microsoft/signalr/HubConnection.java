@@ -46,7 +46,7 @@ public class HubConnection {
     private Single<String> accessTokenProvider;
     private final Map<String, String> headers = new HashMap<>();
     private ConnectionState connectionState = null;
-    private final HttpClient httpClient;
+    private HttpClient httpClient;
     private String stopError;
     private Timer pingTimer = null;
     private final AtomicLong nextServerTimeout = new AtomicLong();
@@ -56,7 +56,8 @@ public class HubConnection {
     private long tickRate = 1000;
     private CompletableSubject handshakeResponseSubject;
     private long handshakeResponseTimeout = 15*1000;
-    private TransportEnum transportEnum = TransportEnum.LONGPOLLING;
+    private int pollTimeout = 100*1000;
+    private TransportEnum transportEnum = TransportEnum.WEBSOCKETS;
     private final Logger logger = LoggerFactory.getLogger(HubConnection.class);
 
     /**
@@ -101,7 +102,7 @@ public class HubConnection {
     }
 
     HubConnection(String url, Transport transport, boolean skipNegotiate, HttpClient httpClient,
-                  Single<String> accessTokenProvider, long handshakeResponseTimeout, Map<String, String> headers) {
+                  Single<String> accessTokenProvider, long handshakeResponseTimeout, Map<String, String> headers, TransportEnum transportEnum) {
         if (url == null || url.isEmpty()) {
             throw new IllegalArgumentException("A valid url is required.");
         }
@@ -123,6 +124,8 @@ public class HubConnection {
 
         if (transport != null) {
             this.transport = transport;
+        } else if (transportEnum != null) {
+            this.transportEnum = transportEnum;
         }
 
         if (handshakeResponseTimeout > 0) {
@@ -304,8 +307,9 @@ public class HubConnection {
             logger.debug("Starting HubConnection.");
             if (transport == null) {
                 switch (transportEnum){
-                    case LONGPOLLING:
+                    case LONG_POLLING:
                         transport = new LongPollingTransport(headers, httpClient);
+                        this.httpClient = new DefaultHttpClient(this.pollTimeout);
                         break;
                     default:
                         transport = new WebSocketTransport(headers, httpClient);
@@ -332,7 +336,7 @@ public class HubConnection {
                             hubConnectionState = HubConnectionState.CONNECTED;
                             logger.info("HubConnection started.");
                             resetServerTimeout();
-                            if(transportEnum != TransportEnum.LONGPOLLING) {
+                            if(transportEnum != TransportEnum.LONG_POLLING) {
                                 this.pingTimer = new Timer();
                                 this.pingTimer.schedule(new TimerTask() {
                                     @Override

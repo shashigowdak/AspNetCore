@@ -17,8 +17,6 @@ public class LongPollingTransport implements Transport {
     private final Map<String, String> headers;
     private Boolean active;
     private String pollUrl;
-    private Runnable receiving;
-
     private final Logger logger = LoggerFactory.getLogger(LongPollingTransport.class);
 
     public LongPollingTransport(Map<String, String> headers, HttpClient client) {

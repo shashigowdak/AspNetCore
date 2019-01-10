@@ -19,6 +19,7 @@ public class HttpHubConnectionBuilder {
     private Single<String> accessTokenProvider;
     private long handshakeResponseTimeout = 0;
     private Map<String, String> headers;
+    private TransportEnum transportEnum;
 
     HttpHubConnectionBuilder(String url) {
         this.url = url;
@@ -30,8 +31,19 @@ public class HttpHubConnectionBuilder {
      * @param transport The transport to be used.
      * @return This instance of the HttpHubConnectionBuilder.
      */
-    HttpHubConnectionBuilder withTransport(Transport transport) {
+    HttpHubConnectionBuilder withTransportImplementation(Transport transport) {
         this.transport = transport;
+        return this;
+    }
+
+    /**
+     * Sets the transport to be used by the {@link HubConnection}.
+     *
+     * @param transportEnum The type of transport to be used.
+     * @return This instance of the HttpHubConnectionBuilder.
+     */
+    public HttpHubConnectionBuilder withTransport(TransportEnum transportEnum) {
+        this.transportEnum = transportEnum;
         return this;
     }
 
@@ -112,6 +124,6 @@ public class HttpHubConnectionBuilder {
      * @return A new instance of {@link HubConnection}.
      */
     public HubConnection build() {
-        return new HubConnection(url, transport, skipNegotiate, httpClient, accessTokenProvider, handshakeResponseTimeout, headers);
+        return new HubConnection(url, transport, skipNegotiate, httpClient, accessTokenProvider, handshakeResponseTimeout, headers, transportEnum);
     }
 }
