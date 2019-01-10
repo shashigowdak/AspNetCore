@@ -93,6 +93,11 @@ namespace Microsoft.AspNetCore.Routing.Internal
                     {
                         Walk(results, values, ambientValues, branch, isFallbackPath);
                     }
+                    else if (value != null && criterion.Branches.TryGetValue(string.Empty, out branch))
+                    {
+                        // This is used when a value is provided for a required value with no value, e.g. page on an action
+                        Walk(results, values, ambientValues, branch, isFallbackPath);
+                    }
                 }
                 else
                 {
@@ -126,7 +131,11 @@ namespace Microsoft.AspNetCore.Routing.Internal
                 var results = new Dictionary<string, DecisionCriterionValue>(StringComparer.OrdinalIgnoreCase);
                 foreach (var kvp in item.Entry.RequiredLinkValues)
                 {
-                    results.Add(kvp.Key, new DecisionCriterionValue(kvp.Value ?? string.Empty));
+                    // Skip null required values, e.g. page, so endpoints with that parameter value will match
+                    //if (kvp.Value != null)
+                    {
+                        results.Add(kvp.Key, new DecisionCriterionValue(kvp.Value ?? string.Empty));
+                    }
                 }
 
                 return results;

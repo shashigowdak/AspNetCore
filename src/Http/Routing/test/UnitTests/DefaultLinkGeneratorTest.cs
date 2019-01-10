@@ -741,6 +741,33 @@ namespace Microsoft.AspNetCore.Routing
             Assert.Equal(expectedPath, generatedPath);
         }
 
+        [Fact]
+        public void GetPathByRouteValues_ParameterMatchesRequireValues_NoAmbientValues1()
+        {
+            // Arrange
+            var homeIndex = EndpointFactory.CreateRouteEndpoint(
+                "{controller}/{action}/{id?}",
+                defaults: new { controller = "Home", action = "Index", },
+                requiredValues: new { controller = "Home", action = "Index", page = (object)null });
+
+            var linkGenerator = CreateLinkGenerator(homeIndex);
+
+            var context = new EndpointSelectorContext();
+            var httpContext = CreateHttpContext();
+            httpContext.Features.Set<IRouteValuesFeature>(context);
+
+            var values = new RouteValueDictionary(new { controller = "Home", action = "Index", page = "123" });
+
+            // Act
+            var generatedPath = linkGenerator.GetPathByRouteValues(
+                httpContext,
+                routeName: null,
+                values: values);
+
+            // Assert
+            Assert.Equal("", generatedPath);
+        }
+
         protected override void AddAdditionalServices(IServiceCollection services)
         {
             services.AddSingleton<IEndpointAddressScheme<int>, IntAddressScheme>();
