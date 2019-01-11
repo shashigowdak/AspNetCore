@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>Common serialiation primitives for SignalR Clients Servers</Description>
@@ -20,7 +20,6 @@
   <ItemGroup>
     <Reference Include="Microsoft.AspNetCore.Connections.Abstractions" />
     <Reference Include="Microsoft.Extensions.Options" />
-    <Reference Include="Newtonsoft.Json" />
     <Reference Include="System.Buffers" />
   </ItemGroup>
 
