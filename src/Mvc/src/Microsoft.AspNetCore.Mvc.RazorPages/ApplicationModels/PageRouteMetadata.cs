@@ -3,16 +3,30 @@
 
 namespace Microsoft.AspNetCore.Mvc.ApplicationModels
 {
-    // This is used to store the uncombined parts of the final page route
-    internal class PageRouteMetadata
+    /// <summary>
+    /// Metadata used to construct an endpoint route to the page.
+    /// </summary>
+    public sealed class PageRouteMetadata
     {
+        /// <summary>
+        /// Initializes a new instance of <see cref="PageRouteMetadata"/>.
+        /// </summary>
+        /// <param name="pageRoute">The page route.</param>
+        /// <param name="routeTemplate">The route template specified by the page.</param>
         public PageRouteMetadata(string pageRoute, string routeTemplate)
         {
             PageRoute = pageRoute;
             RouteTemplate = routeTemplate;
         }
 
+        /// <summary>
+        /// Gets the page route.
+        /// </summary>
         public string PageRoute { get; }
+
+        /// <summary>
+        /// Gets the route template specified by the page.
+        /// </summary>
         public string RouteTemplate { get; }
     }
 }
