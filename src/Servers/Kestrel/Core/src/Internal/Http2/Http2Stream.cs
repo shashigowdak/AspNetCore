@@ -55,7 +55,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
                 this,
                 context.ServiceContext.Log);
 
-            RequestBodyPipe = CreateRequestBodyPipe(context.ServerPeerSettings.InitialWindowSize);
             Output = _http2Output;
         }
 
@@ -99,13 +98,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
                     {
                         // Don't block on IO. This never faults.
                         _ = _http2Output.WriteRstStreamAsync(Http2ErrorCode.NO_ERROR);
-                        RequestBodyPipe.Writer.Complete();
+                        RequestBodyPipe?.Writer.Complete();
                     }
                 }
 
                 _http2Output.Dispose();
 
-                RequestBodyPipe.Reader.Complete();
+                RequestBodyPipe?.Reader.Complete();
 
                 // The app can no longer read any more of the request body, so return any bytes that weren't read to the
                 // connection's flow-control window.
@@ -335,7 +334,12 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             {
                 lock (_completionLock)
                 {
-                    RequestBodyStarted = true;
+                    if (!RequestBodyStarted)
+                    {
+                        EnsureRequestBopyPipe();
+
+                        RequestBodyStarted = true;
+                    }
 
                     if (endStream)
                     {
@@ -473,6 +477,16 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             RequestBodyPipe.Writer.Complete(abortReason);
 
             _inputFlowControl.Abort();
+        }
+
+        internal void EnsureRequestBopyPipe()
+        {
+            if (RequestBodyPipe != null)
+            {
+                return;
+            }
+
+            RequestBodyPipe = CreateRequestBodyPipe(_context.ServerPeerSettings.InitialWindowSize);
         }
 
         private Pipe CreateRequestBodyPipe(uint windowSize)

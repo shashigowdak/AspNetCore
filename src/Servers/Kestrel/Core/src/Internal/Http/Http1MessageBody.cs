@@ -27,6 +27,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
         private async Task PumpAsync()
         {
+            _context.EnsureRequestBodyPipe();
+
             Exception error = null;
 
             try

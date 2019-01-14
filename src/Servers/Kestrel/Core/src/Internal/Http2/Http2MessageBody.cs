@@ -28,6 +28,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
 
         protected override void OnReadStarted()
         {
+            _context.EnsureRequestBopyPipe();
+
             // Produce 100-continue if no request body data for the stream has arrived yet.
             if (!_context.RequestBodyStarted)
             {

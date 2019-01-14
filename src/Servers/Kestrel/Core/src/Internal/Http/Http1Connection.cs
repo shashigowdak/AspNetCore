@@ -44,8 +44,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             _keepAliveTicks = ServerOptions.Limits.KeepAliveTimeout.Ticks;
             _requestHeadersTimeoutTicks = ServerOptions.Limits.RequestHeadersTimeout.Ticks;
 
-            RequestBodyPipe = CreateRequestBodyPipe();
-
             _http1Output = new Http1OutputProducer(
                 _context.Transport.Output,
                 _context.ConnectionId,
@@ -531,8 +529,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
         void IRequestProcessor.Tick(DateTimeOffset now) { }
 
-        private Pipe CreateRequestBodyPipe()
-            => new Pipe(new PipeOptions
+        internal void EnsureRequestBodyPipe()
+        {
+            if (RequestBodyPipe != null)
+            {
+                return;
+            }
+
+            RequestBodyPipe = new Pipe(new PipeOptions
             (
                 pool: _context.MemoryPool,
                 readerScheduler: ServiceContext.Scheduler,
@@ -542,5 +546,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                 useSynchronizationContext: false,
                 minimumSegmentSize: KestrelMemoryPool.MinimumSegmentSize
             ));
+        }
     }
 }
