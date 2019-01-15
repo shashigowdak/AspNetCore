@@ -5,13 +5,16 @@ using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Options;
 
 namespace Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation
 {
     internal class TestRazorReferenceManager : RazorReferenceManager
     {
         public TestRazorReferenceManager() 
-            : base(new ApplicationPartManager())
+            : base(
+                new ApplicationPartManager(),
+                Options.Create(new MvcRazorRuntimeCompilationOptions()))
         {
             CompilationReferences = Array.Empty<MetadataReference>();
         }

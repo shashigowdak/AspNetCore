@@ -857,7 +857,7 @@ this should fail";
             var assembly = typeof(RuntimeViewCompilerTest).Assembly;
             applicationPartManager.ApplicationParts.Add(new AssemblyPart(assembly));
 
-            return new RazorReferenceManager(applicationPartManager);
+            return new RazorReferenceManager(applicationPartManager, Options.Create(new MvcRazorRuntimeCompilationOptions()));
         }
 
         private class TestRazorViewCompiler : RuntimeViewCompiler

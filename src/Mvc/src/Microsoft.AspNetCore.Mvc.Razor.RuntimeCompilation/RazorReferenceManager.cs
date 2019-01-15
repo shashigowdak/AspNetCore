@@ -9,19 +9,24 @@ using System.Reflection.PortableExecutable;
 using System.Threading;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Options;
 
 namespace Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation
 {
     internal class RazorReferenceManager
     {
         private readonly ApplicationPartManager _partManager;
+        private readonly MvcRazorRuntimeCompilationOptions _options;
         private object _compilationReferencesLock = new object();
         private bool _compilationReferencesInitialized;
         private IReadOnlyList<MetadataReference> _compilationReferences;
 
-        public RazorReferenceManager(ApplicationPartManager partManager)
+        public RazorReferenceManager(
+            ApplicationPartManager partManager,
+            IOptions<MvcRazorRuntimeCompilationOptions> options)
         {
             _partManager = partManager;
+            _options = options.Value;
         }
 
         public virtual IReadOnlyList<MetadataReference> CompilationReferences
@@ -38,15 +43,26 @@ namespace Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation
 
         private IReadOnlyList<MetadataReference> GetCompilationReferences()
         {
-            var referencePaths = _partManager
-                .ApplicationParts
-                .OfType<ICompilationReferencesProvider>()
-                .SelectMany(part => part.GetReferencePaths())
-                .Distinct(StringComparer.OrdinalIgnoreCase);
+            var referencePaths = GetReferencePaths();
 
             return referencePaths
                 .Select(CreateMetadataReference)
                 .ToList();
+        }
+
+        // For unit testing
+        internal IEnumerable<string> GetReferencePaths()
+        {
+            var referencesFromApplicationParts = _partManager
+                .ApplicationParts
+                .OfType<ICompilationReferencesProvider>()
+                .SelectMany(part => part.GetReferencePaths());
+
+            var referencePaths = referencesFromApplicationParts
+                .Concat(_options.AdditionalReferencePaths)
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            return referencePaths;
         }
 
         private static MetadataReference CreateMetadataReference(string path)
