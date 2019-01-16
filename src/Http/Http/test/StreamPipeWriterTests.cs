@@ -141,42 +141,45 @@ namespace System.IO.Pipelines.Tests
             }
         }
 
-        [Fact(Skip = "https://github.com/aspnet/AspNetCore/issues/4621")]
+        [Fact]
         public async Task CancelPendingFlushBetweenWritesAllDataIsPreserved()
         {
-            MemoryStream = new SingleWriteStream();
-            Writer = new StreamPipeWriter(MemoryStream);
-            FlushResult flushResult = new FlushResult();
-
-            var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            var task = Task.Run(async () =>
+            for (var i = 0; i < 100; i++)
             {
-                try
+                MemoryStream = new SingleWriteStream();
+                Writer = new StreamPipeWriter(MemoryStream);
+                FlushResult flushResult = new FlushResult();
+
+                var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                var task = Task.Run(async () =>
                 {
-                    await Writer.WriteAsync(Encoding.ASCII.GetBytes("data"));
+                    try
+                    {
+                        await Writer.WriteAsync(Encoding.ASCII.GetBytes("data"));
 
-                    var writingTask = Writer.WriteAsync(Encoding.ASCII.GetBytes(" data"));
-                    tcs.SetResult(0);
-                    flushResult = await writingTask;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    throw ex;
-                }
-            });
+                        var writingTask = Writer.WriteAsync(Encoding.ASCII.GetBytes(" data"));
+                        tcs.SetResult(0);
+                        flushResult = await writingTask;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        throw ex;
+                    }
+                });
 
-            await tcs.Task;
+                await tcs.Task;
 
-            Writer.CancelPendingFlush();
+                Writer.CancelPendingFlush();
 
-            await task;
+                await task;
 
-            Assert.True(flushResult.IsCanceled);
+                Assert.True(flushResult.IsCanceled);
 
-            await Writer.WriteAsync(Encoding.ASCII.GetBytes(" more data"));
-            Assert.Equal(Encoding.ASCII.GetBytes("data data more data"), Read());
+                await Writer.WriteAsync(Encoding.ASCII.GetBytes(" more data"));
+                Assert.Equal(Encoding.ASCII.GetBytes("data data more data"), Read());
+            }
         }
 
         [Fact]
@@ -214,59 +217,62 @@ namespace System.IO.Pipelines.Tests
             Assert.True(flushResult.IsCanceled);
         }
 
-        [Fact(Skip = "https://github.com/aspnet/AspNetCore/issues/4621")]
+        [Fact]
         public async Task CancelPendingFlushLostOfCancellationsNoDataLost()
         {
-            var writeSize = 16;
-            var singleWriteStream = new SingleWriteStream();
-            MemoryStream = singleWriteStream;
-            Writer = new StreamPipeWriter(MemoryStream, minimumSegmentSize: writeSize);
-
-            for (var i = 0; i < 10; i++)
+            for (var k = 0; k < 100; k++)
             {
-                FlushResult flushResult = new FlushResult();
-                var expectedData = Encoding.ASCII.GetBytes(new string('a', writeSize));
+                var writeSize = 16;
+                var singleWriteStream = new SingleWriteStream();
+                MemoryStream = singleWriteStream;
+                Writer = new StreamPipeWriter(MemoryStream, minimumSegmentSize: writeSize);
 
-                var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-                var task = Task.Run(async () =>
+                for (var i = 0; i < 10; i++)
                 {
-                    try
+                    FlushResult flushResult = new FlushResult();
+                    var expectedData = Encoding.ASCII.GetBytes(new string('a', writeSize));
+
+                    var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                    var task = Task.Run(async () =>
                     {
-                        // Create two Segments
-                        // First one will succeed to write, other one will hang.
-                        for (var j = 0; j < 2; j++)
+                        try
                         {
-                            Writer.Write(expectedData);
+                            // Create two Segments
+                            // First one will succeed to write, other one will hang.
+                            for (var j = 0; j < 2; j++)
+                            {
+                                Writer.Write(expectedData);
+                            }
+
+                            var flushTask = Writer.FlushAsync();
+                            tcs.SetResult(0);
+                            flushResult = await flushTask;
                         }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                            throw ex;
+                        }
+                    });
 
-                        var flushTask = Writer.FlushAsync();
-                        tcs.SetResult(0);
-                        flushResult = await flushTask;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                        throw ex;
-                    }
-                });
+                    await tcs.Task;
 
-                await tcs.Task;
+                    Writer.CancelPendingFlush();
 
-                Writer.CancelPendingFlush();
+                    await task;
 
-                await task;
+                    Assert.True(flushResult.IsCanceled);
+                }
 
-                Assert.True(flushResult.IsCanceled);
+                // Only half of the data was written because every other flush failed.
+                Assert.Equal(16 * 10, ReadWithoutFlush().Length);
+
+                // Start allowing all writes to make read succeed.
+                singleWriteStream.AllowAllWrites = true;
+
+                Assert.Equal(16 * 10 * 2, Read().Length);
             }
-
-            // Only half of the data was written because every other flush failed.
-            Assert.Equal(16 * 10, ReadWithoutFlush().Length);
-
-            // Start allowing all writes to make read succeed.
-            singleWriteStream.AllowAllWrites = true;
-
-            Assert.Equal(16 * 10 * 2, Read().Length);
         }
 
         [Fact]
