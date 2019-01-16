@@ -21,6 +21,7 @@ namespace Microsoft.AspNetCore.Diagnostics.FunctionalTests
         [ConditionalFact]
         [OSSkipCondition(OperatingSystems.Linux)]
         [OSSkipCondition(OperatingSystems.MacOSX)]
+        [OSSkipCondition(OperatingSystems.Windows)] // https://github.com/aspnet/AspNetCore/issues/6740 (No sql server helix)
         public async Task DatabaseErrorPage_ShowsError()
         {
             // Arrange

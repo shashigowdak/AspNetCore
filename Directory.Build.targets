@@ -131,8 +131,8 @@
         <TestAssembly>$(TargetFileName)</TestAssembly>
         <TestName>$(MSBuildProjectName)-$(TargetFramework)</TestName>
         <!-- Look into how to be able to use $(NETCoreSdkVersion) -->
-        <Command Condition="$(HelixTargetQueue.StartsWith('Windows'))">runtests.cmd $(TargetFileName) $(NETCoreSdkVersion) $(RuntimeFrameworkVersion)</Command>
-        <Command Condition="!$(HelixTargetQueue.StartsWith('Windows'))">./runtests.sh $(TargetFileName) $(NETCoreSdkVersion) $(RuntimeFrameworkVersion)</Command>
+        <Command Condition="$(HelixTargetQueue.StartsWith('Windows'))">runtests.cmd $(TargetFileName) $(NETCoreSdkVersion) $(MicrosoftNETCoreAppPackageVersion)</Command>
+        <Command Condition="!$(HelixTargetQueue.StartsWith('Windows'))">./runtests.sh $(TargetFileName) $(NETCoreSdkVersion) $(MicrosoftNETCoreAppPackageVersion)</Command>
         <TestTimeout>$(DistributedTestTimeout)</TestTimeout>
       </HelixPayload>
     </ItemGroup>

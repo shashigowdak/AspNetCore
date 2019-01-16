@@ -9,6 +9,7 @@
     <WarningsNotAsErrors>$(WarningsNotAsErrors);xUnit1004</WarningsNotAsErrors>
     <!-- Temporarily suppress warnings about Microsoft.AspNetCore.Server.IntegrationTesting -->
     <NoWarn>$(NoWarn);NU1605</NoWarn>
+    <BuildHelixPayload>false</BuildHelixPayload>
   </PropertyGroup>
 
   <ItemGroup>

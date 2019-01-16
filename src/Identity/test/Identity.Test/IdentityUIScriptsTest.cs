@@ -37,7 +37,7 @@ namespace Microsoft.AspNetCore.Identity.Test
             }
         }
 
-        [Theory]
+        [Theory(Skip = "https://github.com/aspnet/AspNetCore/issues/6549")]
         [MemberData(nameof(ScriptWithIntegrityData))]
         public async Task IdentityUI_ScriptTags_SubresourceIntegrityCheck(ScriptTag scriptTag)
         {
@@ -65,7 +65,7 @@ namespace Microsoft.AspNetCore.Identity.Test
             }
         }
 
-        [Theory]
+        [Theory(Skip = "https://github.com/aspnet/AspNetCore/issues/6549")]
         [MemberData(nameof(ScriptWithFallbackSrcData))]
         public async Task IdentityUI_ScriptTags_FallbackSourceContent_Matches_CDNContent(ScriptTag scriptTag)
         {

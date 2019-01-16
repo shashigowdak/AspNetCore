@@ -8,6 +8,7 @@
     <!-- The naming of this file doesn't match repo conventions. This overrides the conventions. -->
     <IsTestAssetProject>true</IsTestAssetProject>
     <IsTestProject>false</IsTestProject>
+    <BuildHelixPayload>false</BuildHelixPayload>
   </PropertyGroup>
 
   <ItemGroup>
