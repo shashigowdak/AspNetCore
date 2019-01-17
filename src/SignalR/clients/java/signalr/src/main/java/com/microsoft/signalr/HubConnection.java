@@ -308,8 +308,8 @@ public class HubConnection {
             if (transport == null) {
                 switch (transportEnum){
                     case LONG_POLLING:
-                        transport = new LongPollingTransport(headers, httpClient);
                         this.httpClient = new DefaultHttpClient(this.pollTimeout);
+                        transport = new LongPollingTransport(headers, httpClient);
                         break;
                     default:
                         transport = new WebSocketTransport(headers, httpClient);

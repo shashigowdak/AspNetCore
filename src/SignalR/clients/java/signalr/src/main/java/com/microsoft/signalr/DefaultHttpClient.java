@@ -20,7 +20,7 @@ final class DefaultHttpClient extends HttpClient {
     private final OkHttpClient client;
 
     public DefaultHttpClient() {
-        this(5);
+        this(5000);
     }
 
     public DefaultHttpClient(int pollTimeout) {
