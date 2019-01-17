@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using Microsoft.Extensions.Logging;
 using System;
 using System.Buffers;
 using System.Diagnostics;
@@ -46,7 +47,6 @@ namespace System.IO.Pipelines
         {
         }
 
-
         /// <summary>
         /// Creates a new StreamPipeReader.
         /// </summary>
@@ -81,6 +81,8 @@ namespace System.IO.Pipelines
         {
             AdvanceTo(consumed, consumed);
         }
+
+        internal ILogger Logger { get; set; }
 
         private CancellationTokenSource InternalTokenSource
         {
@@ -234,7 +236,9 @@ namespace System.IO.Pipelines
                 {
                     AllocateReadTail();
 #if NETCOREAPP3_0
+                    Logger?.LogInformation("Starting ReadAsync call on underlying stream.");
                     var length = await _readingStream.ReadAsync(_readTail.AvailableMemory.Slice(_readTail.End), tokenSource.Token);
+                    Logger?.LogInformation($"ReadAsyncCompleted. Read length={length}");
 #elif NETSTANDARD2_0
                     if (!MemoryMarshal.TryGetArray<byte>(_readTail.AvailableMemory.Slice(_readTail.End), out var arraySegment))
                     {
@@ -257,6 +261,8 @@ namespace System.IO.Pipelines
                 }
                 catch (OperationCanceledException)
                 {
+                    Logger?.LogInformation($"Read Operation canceled.");
+
                     ClearCancellationToken();
 
                     if (cancellationToken.IsCancellationRequested)

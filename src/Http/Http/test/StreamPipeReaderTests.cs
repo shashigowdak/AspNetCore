@@ -154,6 +154,8 @@ namespace System.IO.Pipelines.Tests
             for (var i = 0; i < 100; i++)
             {
                 var pipeReader = new StreamPipeReader(new HangingStream());
+                pipeReader.Logger = Logger;
+
                 var cts = new CancellationTokenSource(1);
                 await Assert.ThrowsAsync<TaskCanceledException>(async () => await pipeReader.ReadAsync(cts.Token));
             }
@@ -162,9 +164,11 @@ namespace System.IO.Pipelines.Tests
         [Fact]
         public async Task ReadCanBeCanceledViaCancelPendingReadWhenReadIsAsync()
         {
+
             for (var i = 0; i < 100; i++)
             {
                 var pipeReader = new StreamPipeReader(new HangingStream());
+                pipeReader.Logger = Logger;
 
                 var result = new ReadResult();
                 var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);

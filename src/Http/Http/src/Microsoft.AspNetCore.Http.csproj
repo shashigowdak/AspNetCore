@@ -18,6 +18,7 @@
     <Reference Include="Microsoft.AspNetCore.WebUtilities" />
     <Reference Include="Microsoft.Extensions.ObjectPool" />
     <Reference Include="Microsoft.Extensions.Options" />
+    <Reference Include="Microsoft.Extensions.Logging" />
     <Reference Include="Microsoft.Net.Http.Headers" />
   </ItemGroup>
 

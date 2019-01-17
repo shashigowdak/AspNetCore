@@ -2,10 +2,11 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Text;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace System.IO.Pipelines.Tests
 {
-    public abstract class StreamPipeTest : IDisposable
+    public abstract class StreamPipeTest : LoggedTest, IDisposable
     {
         protected const int MaximumSizeHigh = 65;
 
@@ -24,8 +25,9 @@ namespace System.IO.Pipelines.Tests
             Reader = new StreamPipeReader(MemoryStream, new StreamPipeReaderOptions(MinimumSegmentSize, minimumReadThreshold: 256, new TestMemoryPool()));
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             Writer.Complete();
             Reader.Complete();
         }
