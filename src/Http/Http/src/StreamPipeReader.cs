@@ -267,6 +267,7 @@ namespace System.IO.Pipelines
 
                     if (cancellationToken.IsCancellationRequested)
                     {
+                        Logger?.LogInformation($"Cancellation requested, throwing exception.");
                         throw;
                     }
 
