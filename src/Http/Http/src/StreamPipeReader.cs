@@ -1,17 +1,13 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using Microsoft.Extensions.Logging;
-using System;
 using System.Buffers;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace System.IO.Pipelines
 {
@@ -238,7 +234,7 @@ namespace System.IO.Pipelines
 #if NETCOREAPP3_0
                     Logger?.LogInformation("Starting ReadAsync call on underlying stream.");
                     var length = await _readingStream.ReadAsync(_readTail.AvailableMemory.Slice(_readTail.End), tokenSource.Token);
-                    Logger?.LogInformation($"ReadAsyncCompleted. Read length={length}");
+                    Logger?.LogInformation($"ReadAsync Completed. Read length={length}");
 #elif NETSTANDARD2_0
                     if (!MemoryMarshal.TryGetArray<byte>(_readTail.AvailableMemory.Slice(_readTail.End), out var arraySegment))
                     {

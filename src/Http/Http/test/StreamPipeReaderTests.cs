@@ -151,39 +151,32 @@ namespace System.IO.Pipelines.Tests
         [Fact]
         public async Task ReadCanBeCancelledViaProvidedCancellationToken()
         {
-            for (var i = 0; i < 100; i++)
-            {
-                var pipeReader = new StreamPipeReader(new HangingStream());
-                pipeReader.Logger = Logger;
+            var pipeReader = new StreamPipeReader(new HangingStream());
+            pipeReader.Logger = Logger;
 
-                var cts = new CancellationTokenSource(1);
-                await Assert.ThrowsAsync<TaskCanceledException>(async () => await pipeReader.ReadAsync(cts.Token));
-            }
+            var cts = new CancellationTokenSource(1);
+            await Assert.ThrowsAsync<TaskCanceledException>(async () => await pipeReader.ReadAsync(cts.Token));
         }
 
         [Fact]
         public async Task ReadCanBeCanceledViaCancelPendingReadWhenReadIsAsync()
         {
+            var pipeReader = new StreamPipeReader(new HangingStream());
+            pipeReader.Logger = Logger;
 
-            for (var i = 0; i < 100; i++)
+            var result = new ReadResult();
+            var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var task = Task.Run(async () =>
             {
-                var pipeReader = new StreamPipeReader(new HangingStream());
-                pipeReader.Logger = Logger;
+                var readingTask = pipeReader.ReadAsync();
+                tcs.SetResult(0);
+                result = await readingTask;
+            });
+            await tcs.Task;
+            pipeReader.CancelPendingRead();
+            await task;
 
-                var result = new ReadResult();
-                var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-                var task = Task.Run(async () =>
-                {
-                    var readingTask = pipeReader.ReadAsync();
-                    tcs.SetResult(0);
-                    result = await readingTask;
-                });
-                await tcs.Task;
-                pipeReader.CancelPendingRead();
-                await task;
-
-                Assert.True(result.IsCanceled);
-            }
+            Assert.True(result.IsCanceled);
         }
 
         [Fact]

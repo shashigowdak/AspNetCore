@@ -1,16 +1,13 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace System.IO.Pipelines
 {
@@ -48,6 +45,8 @@ namespace System.IO.Pipelines
                 }
             }
         }
+
+        internal ILogger Logger { get; set; }
 
         /// <summary>
         /// Creates a new StreamPipeWrapper
@@ -180,7 +179,10 @@ namespace System.IO.Pipelines
                         {
                             var segment = _completedSegments[0];
 #if NETCOREAPP3_0
+                            Logger?.LogInformation("Starting WriteAsync call on underlying stream.");
                             await _writingStream.WriteAsync(segment.Buffer.Slice(0, segment.Length), localToken);
+                            Logger?.LogInformation("WriteAsync Completed.");
+
 #elif NETSTANDARD2_0
                             MemoryMarshal.TryGetArray<byte>(segment.Buffer, out var arraySegment);
                             await _writingStream.WriteAsync(arraySegment.Array, 0, segment.Length, localToken);
@@ -196,7 +198,10 @@ namespace System.IO.Pipelines
                     if (!_currentSegment.IsEmpty)
                     {
 #if NETCOREAPP3_0
+                        Logger?.LogInformation("Starting WriteAsync call on underlying stream.");
                         await _writingStream.WriteAsync(_currentSegment.Slice(0, _position), localToken);
+                        Logger?.LogInformation("WriteAsync Completed.");
+
 #elif NETSTANDARD2_0
                         MemoryMarshal.TryGetArray<byte>(_currentSegment, out var arraySegment);
                         await _writingStream.WriteAsync(arraySegment.Array, 0, _position, localToken);
@@ -207,12 +212,16 @@ namespace System.IO.Pipelines
                         _position = 0;
                     }
 
+                    Logger?.LogInformation("Starting FlushAsync call on underlying stream.");
                     await _writingStream.FlushAsync(localToken);
+                    Logger?.LogInformation("FlushAsync Completed.");
 
                     return new FlushResult(isCanceled: false, IsCompletedOrThrow());
                 }
                 catch (OperationCanceledException)
                 {
+                    Logger?.LogInformation($"Write/Flush operation canceled.");
+
                     // Remove the cancellation token such that the next time Flush is called
                     // A new CTS is created.
                     lock (_lockObject)
