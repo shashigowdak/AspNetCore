@@ -59,6 +59,7 @@ public class LongPollingTransport implements Transport {
                 this.active = false;
             } else if (response.getStatusCode() != 200) {
                 logger.error("Unexpected response code {}", response.getStatusCode());
+                this.active = false;
             } else {
                 logger.info("Message received");
                 this.onReceive(response.getContent());
@@ -91,6 +92,10 @@ public class LongPollingTransport implements Transport {
 
     @Override
     public Completable stop() {
+        logger.info("LongPolling transport stopped.");
+        this.active = false;
+        this.client.delete(this.url);
+        this.onClose.invoke(null);
         return Completable.complete();
     }
 }
