@@ -99,7 +99,6 @@ abstract class HttpClient {
         HttpRequest request = new HttpRequest();
         request.setUrl(url);
         request.setMethod("POST");
-
         return this.send(request, body);
     }
 
