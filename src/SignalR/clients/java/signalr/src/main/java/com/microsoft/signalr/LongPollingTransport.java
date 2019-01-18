@@ -4,6 +4,8 @@
 package com.microsoft.signalr;
 
 import io.reactivex.Completable;
+import okhttp3.Headers;
+import okhttp3.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +33,9 @@ public class LongPollingTransport implements Transport {
         this.url = url;
         pollUrl = url + "&_=" + System.currentTimeMillis();
         logger.info("Polling {}", pollUrl);
-
-        HttpResponse response = this.client.get(pollUrl).blockingGet();
+        HttpRequest request = new HttpRequest();
+        request.addHeaders(headers);
+        HttpResponse response = this.client.get(pollUrl, request).blockingGet();
         if (response.getStatusCode() != 200){
             logger.error("Unexpected response code {}", response.getStatusCode());
             this.active = false;
@@ -51,6 +54,8 @@ public class LongPollingTransport implements Transport {
             // Poll
             pollUrl = url + "&_=" + System.currentTimeMillis();
             logger.info("Polling {}", pollUrl);
+            HttpRequest request = new HttpRequest();
+            request.addHeaders(headers);
             HttpResponse response = this.client.get(pollUrl).blockingGet();
             response.getStatusCode();
 
