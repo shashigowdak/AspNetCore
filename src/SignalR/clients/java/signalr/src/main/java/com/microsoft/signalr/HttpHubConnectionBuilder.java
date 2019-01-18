@@ -25,12 +25,7 @@ public class HttpHubConnectionBuilder {
         this.url = url;
     }
 
-    /**
-     * Sets the transport to be used by the {@link HubConnection}.
-     *
-     * @param transport The transport to be used.
-     * @return This instance of the HttpHubConnectionBuilder.
-     */
+    //For testing purposes. The Transport interface isn't public.
     HttpHubConnectionBuilder withTransportImplementation(Transport transport) {
         this.transport = transport;
         return this;

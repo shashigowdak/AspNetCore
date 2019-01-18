@@ -57,7 +57,7 @@ public class HubConnection {
     private CompletableSubject handshakeResponseSubject;
     private long handshakeResponseTimeout = 15*1000;
     private int pollTimeout = 100*1000;
-    private TransportEnum transportEnum = TransportEnum.WEBSOCKETS;
+    private TransportEnum transportEnum = TransportEnum.ALL;
     private final Logger logger = LoggerFactory.getLogger(HubConnection.class);
 
     /**
@@ -315,9 +315,6 @@ public class HubConnection {
                         transport = new WebSocketTransport(headers, httpClient);
                 }
             }
-            if (transport == null) {
-                transport = new WebSocketTransport(headers, httpClient);
-            }
 
             transport.setOnReceive(this.callback);
             transport.setOnClose((message) -> stopConnection(message));
@@ -385,7 +382,9 @@ public class HubConnection {
             }
 
             if (response.getRedirectUrl() == null) {
-                if (!response.getAvailableTransports().contains("WebSockets")) {
+                if ((this.transportEnum == TransportEnum.ALL && !(response.getAvailableTransports().contains("WebSockets") || response.getAvailableTransports().contains("LongPolling"))) ||
+                        (this.transportEnum == TransportEnum.WEBSOCKETS && !response.getAvailableTransports().contains("WebSockets")) ||
+                        (this.transportEnum == TransportEnum.LONG_POLLING && !response.getAvailableTransports().contains("LongPolling"))) {
                     throw new RuntimeException("There were no compatible transports on the server.");
                 }
 
