@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>Real-time communication framework for ASP.NET Core.</Description>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <LangVersion>8.0</LangVersion>
     <RootNamespace>Microsoft.AspNetCore.SignalR</RootNamespace>
   </PropertyGroup>
 

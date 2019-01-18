@@ -263,16 +263,20 @@ namespace Microsoft.AspNetCore.SignalR.Internal
                     {
                         var result = await ExecuteHubMethod(methodExecutor, hub, arguments);
 
-                        if (!TryGetStreamingEnumerator(connection, hubMethodInvocationMessage.InvocationId, descriptor, result, out var enumerator, ref cts))
+                        if (result == null)
                         {
                             Log.InvalidReturnValueFromStreamingMethod(_logger, methodExecutor.MethodInfo.Name);
                             await SendInvocationError(hubMethodInvocationMessage.InvocationId, connection,
-                                $"The value returned by the streaming method '{methodExecutor.MethodInfo.Name}' is not a ChannelReader<>.");
+                                $"The value returned by the streaming method '{methodExecutor.MethodInfo.Name}' is not a ChannelReader<> or IAsyncEnumerable<>.");
                             return;
                         }
 
+                        cts = cts ?? CancellationTokenSource.CreateLinkedTokenSource(connection.ConnectionAborted);
+                        connection.ActiveRequestCancellationSources.TryAdd(hubMethodInvocationMessage.InvocationId, cts);
+                        var enumerable = descriptor.FromReturnedStream(result, cts.Token);
+
                         Log.StreamingResult(_logger, hubMethodInvocationMessage.InvocationId, methodExecutor);
-                        _ = StreamResultsAsync(hubMethodInvocationMessage.InvocationId, connection, enumerator, scope, hubActivator, hub, cts);
+                        _ = StreamResultsAsync(hubMethodInvocationMessage.InvocationId, connection, enumerable, scope, hubActivator, hub, cts);
                     }
 
                     else if (string.IsNullOrEmpty(hubMethodInvocationMessage.InvocationId))
@@ -358,7 +362,7 @@ namespace Microsoft.AspNetCore.SignalR.Internal
             }
         }
 
-        private async Task StreamResultsAsync(string invocationId, HubConnectionContext connection, IAsyncEnumerator<object> enumerator, IServiceScope scope,
+        private async Task StreamResultsAsync(string invocationId, HubConnectionContext connection, IAsyncEnumerable<object> enumerable, IServiceScope scope,
             IHubActivator<THub> hubActivator, THub hub, CancellationTokenSource streamCts)
         {
             string error = null;
@@ -367,10 +371,11 @@ namespace Microsoft.AspNetCore.SignalR.Internal
             {
                 try
                 {
-                    while (await enumerator.MoveNextAsync())
+
+                    await foreach (var streamItem in enumerable)
                     {
                         // Send the stream item
-                        await connection.WriteAsync(new StreamItemMessage(invocationId, enumerator.Current));
+                        await connection.WriteAsync(new StreamItemMessage(invocationId, streamItem));
                     }
                 }
                 catch (ChannelClosedException ex)
@@ -389,8 +394,6 @@ namespace Microsoft.AspNetCore.SignalR.Internal
                 }
                 finally
                 {
-                    await enumerator.DisposeAsync();
-
                     hubActivator.Release(hub);
 
                     // Dispose the linked CTS for the stream.
@@ -470,10 +473,10 @@ namespace Microsoft.AspNetCore.SignalR.Internal
             return authorizationResult.Succeeded;
         }
 
-        private async Task<bool> ValidateInvocationMode(HubMethodDescriptor hubMethodDescriptor, bool isStreamedInvocation,
+        private async Task<bool> ValidateInvocationMode(HubMethodDescriptor hubMethodDescriptor, bool isStreamResponse,
             HubMethodInvocationMessage hubMethodInvocationMessage, HubConnectionContext connection)
         {
-            if (hubMethodDescriptor.IsStreamable && !isStreamedInvocation)
+            if (hubMethodDescriptor.IsStreamResponse && !isStreamResponse)
             {
                 // Non-null/empty InvocationId? Blocking
                 if (!string.IsNullOrEmpty(hubMethodInvocationMessage.InvocationId))
@@ -486,7 +489,7 @@ namespace Microsoft.AspNetCore.SignalR.Internal
                 return false;
             }
 
-            if (!hubMethodDescriptor.IsStreamable && isStreamedInvocation)
+            if (!hubMethodDescriptor.IsStreamResponse && isStreamResponse)
             {
                 Log.NonStreamingMethodCalledWithStream(_logger, hubMethodInvocationMessage);
                 await connection.WriteAsync(CompletionMessage.WithError(hubMethodInvocationMessage.InvocationId,
@@ -496,26 +499,6 @@ namespace Microsoft.AspNetCore.SignalR.Internal
             }
 
             return true;
-        }
-
-        private bool TryGetStreamingEnumerator(HubConnectionContext connection, string invocationId, HubMethodDescriptor hubMethodDescriptor, object result, out IAsyncEnumerator<object> enumerator, ref CancellationTokenSource streamCts)
-        {
-            if (result != null)
-            {
-                if (hubMethodDescriptor.IsStreamable)
-                {
-                    if (streamCts == null)
-                    {
-                        streamCts = CancellationTokenSource.CreateLinkedTokenSource(connection.ConnectionAborted);
-                    }
-                    connection.ActiveRequestCancellationSources.TryAdd(invocationId, streamCts);
-                    enumerator = hubMethodDescriptor.FromReturnedStream(result, streamCts.Token);
-                    return true;
-                }
-            }
-
-            enumerator = null;
-            return false;
         }
 
         private void DiscoverHubMethods()
