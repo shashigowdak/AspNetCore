@@ -43,6 +43,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
         private bool _completed;
         private bool _aborted;
 
+        private ValueTask<FlushResult> _completedFlushResult = new ValueTask<FlushResult>(new FlushResult());
+
         public Http2FrameWriter(
             PipeWriter outputPipeWriter,
             ConnectionContext connectionContext,
@@ -115,7 +117,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return _completedFlushResult;
                 }
                 
                 var bytesWritten = _unflushedBytes;
@@ -131,7 +133,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return _completedFlushResult;
                 }
 
                 _outgoingFrame.PrepareHeaders(Http2HeadersFrameFlags.END_HEADERS, streamId);
@@ -181,13 +183,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             }
         }
 
-        public Task WriteResponseTrailers(int streamId, HttpResponseTrailers headers)
+        public ValueTask<FlushResult> WriteResponseTrailers(int streamId, HttpResponseTrailers headers)
         {
             lock (_writeLock)
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return _completedFlushResult;
                 }
 
                 try
@@ -236,7 +238,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             }
         }
 
-        public Task WriteDataAsync(int streamId, StreamOutputFlowControl flowControl, ReadOnlySequence<byte> data, bool endStream)
+        public ValueTask<FlushResult> WriteDataAsync(int streamId, StreamOutputFlowControl flowControl, ReadOnlySequence<byte> data, bool endStream)
         {
             // The Length property of a ReadOnlySequence can be expensive, so we cache the value.
             var dataLength = data.Length;
@@ -245,7 +247,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             {
                 if (_completed || flowControl.IsAborted)
                 {
-                    return Task.CompletedTask;
+                    return _completedFlushResult;
                 }
 
                 // Zero-length data frames are allowed to be sent immediately even if there is no space available in the flow control window.
@@ -312,12 +314,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             // Plus padding
         }
 
-        private async Task WriteDataAsync(int streamId, StreamOutputFlowControl flowControl, ReadOnlySequence<byte> data, long dataLength, bool endStream)
+        private async ValueTask<FlushResult> WriteDataAsync(int streamId, StreamOutputFlowControl flowControl, ReadOnlySequence<byte> data, long dataLength, bool endStream)
         {
+            FlushResult returnValue = new FlushResult();
+
             while (dataLength > 0)
             {
                 OutputFlowControlAwaitable availabilityAwaitable;
-                var writeTask = Task.CompletedTask;
+                var writeTask = _completedFlushResult;
 
                 lock (_writeLock)
                 {
@@ -344,7 +348,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
 
                         // Don't call TimeFlushUnsynchronizedAsync() since we time this write while also accounting for
                         // flow control induced backpressure below.
-                        writeTask = _flusher.FlushAsync().AsTask();
+                        writeTask = _flusher.FlushAsync();
                     }
 
                     if (_minResponseDataRate != null)
@@ -373,7 +377,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
                     await availabilityAwaitable;
                 }
 
-                await writeTask;
+                returnValue = await writeTask;
 
                 if (_minResponseDataRate != null)
                 {
@@ -383,6 +387,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
 
             // Ensure that the application continuation isn't executed inline by ProcessWindowUpdateFrameAsync.
             await ThreadPoolAwaitable.Instance;
+
+            return returnValue;
         }
 
         /* https://tools.ietf.org/html/rfc7540#section-6.9
@@ -390,13 +396,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             |R|              Window Size Increment (31)                     |
             +-+-------------------------------------------------------------+
         */
-        public Task WriteWindowUpdateAsync(int streamId, int sizeIncrement)
+        public ValueTask<FlushResult> WriteWindowUpdateAsync(int streamId, int sizeIncrement)
         {
             lock (_writeLock)
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return _completedFlushResult;
                 }
 
                 _outgoingFrame.PrepareWindowUpdate(streamId, sizeIncrement);
@@ -413,13 +419,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             |                        Error Code (32)                        |
             +---------------------------------------------------------------+
         */
-        public Task WriteRstStreamAsync(int streamId, Http2ErrorCode errorCode)
+        public ValueTask<FlushResult> WriteRstStreamAsync(int streamId, Http2ErrorCode errorCode)
         {
             lock (_writeLock)
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return _completedFlushResult;
                 }
 
                 _outgoingFrame.PrepareRstStream(streamId, errorCode);
@@ -440,13 +446,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             |                        Value (32)                             |
             +---------------------------------------------------------------+
         */
-        public Task WriteSettingsAsync(IList<Http2PeerSetting> settings)
+        public ValueTask<FlushResult> WriteSettingsAsync(IList<Http2PeerSetting> settings)
         {
             lock (_writeLock)
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return _completedFlushResult;
                 }
 
                 _outgoingFrame.PrepareSettings(Http2SettingsFrameFlags.NONE);
@@ -473,13 +479,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
         }
 
         // No payload
-        public Task WriteSettingsAckAsync()
+        public ValueTask<FlushResult> WriteSettingsAckAsync()
         {
             lock (_writeLock)
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return _completedFlushResult;
                 }
 
                 _outgoingFrame.PrepareSettings(Http2SettingsFrameFlags.ACK);
@@ -495,13 +501,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             |                                                               |
             +---------------------------------------------------------------+
         */
-        public Task WritePingAsync(Http2PingFrameFlags flags, ReadOnlySequence<byte> payload)
+        public ValueTask<FlushResult> WritePingAsync(Http2PingFrameFlags flags, ReadOnlySequence<byte> payload)
         {
             lock (_writeLock)
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return _completedFlushResult;
                 }
 
                 _outgoingFrame.PreparePing(Http2PingFrameFlags.ACK);
@@ -525,13 +531,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             |                  Additional Debug Data (*)                    | (not implemented)
             +---------------------------------------------------------------+
         */
-        public Task WriteGoAwayAsync(int lastStreamId, Http2ErrorCode errorCode)
+        public ValueTask<FlushResult> WriteGoAwayAsync(int lastStreamId, Http2ErrorCode errorCode)
         {
             lock (_writeLock)
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return _completedFlushResult;
                 }
 
                 _outgoingFrame.PrepareGoAway(lastStreamId, errorCode);
