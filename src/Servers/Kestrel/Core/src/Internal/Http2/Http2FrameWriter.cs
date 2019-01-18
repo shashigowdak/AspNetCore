@@ -109,7 +109,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             }
         }
 
-        public Task FlushAsync(IHttpOutputAborter outputAborter, CancellationToken cancellationToken)
+        public ValueTask<FlushResult> FlushAsync(IHttpOutputAborter outputAborter, CancellationToken cancellationToken)
         {
             lock (_writeLock)
             {
@@ -125,7 +125,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             }
         }
 
-        public Task Write100ContinueAsync(int streamId)
+        public ValueTask<FlushResult> Write100ContinueAsync(int streamId)
         {
             lock (_writeLock)
             {
@@ -344,7 +344,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
 
                         // Don't call TimeFlushUnsynchronizedAsync() since we time this write while also accounting for
                         // flow control induced backpressure below.
-                        writeTask = _flusher.FlushAsync();
+                        writeTask = _flusher.FlushAsync().AsTask();
                     }
 
                     if (_minResponseDataRate != null)
@@ -583,7 +583,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             output.Advance(Http2FrameReader.HeaderLength);
         }
 
-        private Task TimeFlushUnsynchronizedAsync()
+        private ValueTask<FlushResult> TimeFlushUnsynchronizedAsync()
         {
             var bytesWritten = _unflushedBytes;
             _unflushedBytes = 0;

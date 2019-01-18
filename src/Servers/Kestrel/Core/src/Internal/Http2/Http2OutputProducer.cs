@@ -27,7 +27,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
         private readonly Http2Stream _stream;
         private readonly object _dataWriterLock = new object();
         private readonly Pipe _dataPipe;
-        private readonly Task _dataWriteProcessingTask;
+        private readonly ValueTask<FlushResult> _dataWriteProcessingTask;
         private bool _startedWritingDataFrames;
         private bool _completed;
         private bool _disposed;
@@ -88,36 +88,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             throw new NotImplementedException();
         }
 
-        public Task FlushAsync(CancellationToken cancellationToken)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return Task.FromCanceled(cancellationToken);
-            }
-
-            lock (_dataWriterLock)
-            {
-                if (_completed)
-                {
-                    return Task.CompletedTask;
-                }
-
-                if (_startedWritingDataFrames)
-                {
-                    // If there's already been response data written to the stream, just wait for that. Any header
-                    // should be in front of the data frames in the connection pipe. Trailers could change things.
-                    return _flusher.FlushAsync(this, cancellationToken);
-                }
-                else
-                {
-                    // Flushing the connection pipe ensures headers already in the pipe are flushed even if no data
-                    // frames have been written.
-                    return _frameWriter.FlushAsync(this, cancellationToken);
-                }
-            }
-        }
-
-        public Task Write100ContinueAsync()
+        public ValueTask<FlushResult> Write100ContinueAsync()
         {
             lock (_dataWriterLock)
             {
@@ -164,11 +135,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
                 _startedWritingDataFrames = true;
 
                 _dataPipe.Writer.Write(data);
-                return _flusher.FlushAsync(this, cancellationToken);
+                return _flusher.FlushAsync(this, cancellationToken).AsTask();
             }
         }
 
-        public Task WriteStreamSuffixAsync()
+        public ValueTask<FlushResult> WriteStreamSuffixAsync()
         {
             lock (_dataWriterLock)
             {
@@ -196,7 +167,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             }
         }
 
-        private async Task ProcessDataWrites()
+        private async ValueTask<FlushResult> ProcessDataWrites()
         {
             try
             {
@@ -233,6 +204,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             }
 
             _dataPipe.Reader.Complete();
+            // what do I return?
         }
 
         private static Pipe CreateDataPipe(MemoryPool<byte> pool)
@@ -246,5 +218,92 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
                 useSynchronizationContext: false,
                 minimumSegmentSize: KestrelMemoryPool.MinimumSegmentSize
             ));
+
+        ValueTask<FlushResult> IHttpOutputProducer.WriteAsync<T>(Func<PipeWriter, T, long> callback, T state, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        ValueTask<FlushResult> FlushAsync(CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Task.FromCanceled(cancellationToken);
+            }
+
+            lock (_dataWriterLock)
+            {
+                if (_completed)
+                {
+                    return Task.CompletedTask;
+                }
+
+                if (_startedWritingDataFrames)
+                {
+                    // If there's already been response data written to the stream, just wait for that. Any header
+                    // should be in front of the data frames in the connection pipe. Trailers could change things.
+                    return _flusher.FlushAsync(this, cancellationToken);
+                }
+                else
+                {
+                    // Flushing the connection pipe ensures headers already in the pipe are flushed even if no data
+                    // frames have been written.
+                    return _frameWriter.FlushAsync(this, cancellationToken);
+                }
+            }
+        }
+
+        ValueTask<FlushResult> IHttpOutputProducer.Write100ContinueAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        ValueTask<FlushResult> IHttpOutputProducer.WriteStreamSuffixAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Advance(int bytes)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Span<byte> GetSpan(int sizeHint = 0)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Memory<byte> GetMemory(int sizeHint = 0)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CancelPendingFlush()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ValueTask<FlushResult> WriteDataToPipeAsync(ReadOnlySpan<byte> data, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Task.FromCanceled(cancellationToken);
+            }
+
+            lock (_dataWriterLock)
+            {
+                // This length check is important because we don't want to set _startedWritingDataFrames unless a data
+                // frame will actually be written causing the headers to be flushed.
+                if (_completed || data.Length == 0)
+                {
+                    return Task.CompletedTask;
+                }
+
+                _startedWritingDataFrames = true;
+
+                _dataPipe.Writer.Write(data);
+                return _flusher.FlushAsync(this, cancellationToken).AsTask();
+            }
+        }
     }
 }

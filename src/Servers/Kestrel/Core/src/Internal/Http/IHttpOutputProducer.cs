@@ -10,12 +10,17 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 {
     public interface IHttpOutputProducer
     {
-        Task WriteAsync<T>(Func<PipeWriter, T, long> callback, T state, CancellationToken cancellationToken);
-        Task FlushAsync(CancellationToken cancellationToken);
-        Task Write100ContinueAsync();
+        ValueTask<FlushResult> WriteAsync<T>(Func<PipeWriter, T, long> callback, T state, CancellationToken cancellationToken);
+        ValueTask<FlushResult> FlushAsync(CancellationToken cancellationToken);
+        ValueTask<FlushResult> Write100ContinueAsync();
         void WriteResponseHeaders(int statusCode, string ReasonPhrase, HttpResponseHeaders responseHeaders);
         // This takes ReadOnlySpan instead of ReadOnlyMemory because it always synchronously copies data before flushing.
+        ValueTask<FlushResult> WriteDataToPipeAsync(ReadOnlySpan<byte> data, CancellationToken cancellationToken);
         Task WriteDataAsync(ReadOnlySpan<byte> data, CancellationToken cancellationToken);
-        Task WriteStreamSuffixAsync();
+        ValueTask<FlushResult> WriteStreamSuffixAsync();
+        void Advance(int bytes);
+        Span<byte> GetSpan(int sizeHint = 0);
+        Memory<byte> GetMemory(int sizeHint = 0);
+        void CancelPendingFlush();
     }
 }

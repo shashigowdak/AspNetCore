@@ -26,6 +26,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         private readonly IHttpMinResponseDataRateFeature _minResponseDataRateFeature;
         private readonly TimingPipeFlusher _flusher;
 
+        private static ValueTask<FlushResult> CompleteFlushTask = new ValueTask<FlushResult>(new FlushResult());
+
         // This locks access to to all of the below fields
         private readonly object _contextLock = new object();
 
@@ -58,26 +60,57 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                 return Task.FromCanceled(cancellationToken);
             }
 
+            return WriteAsync(buffer, cancellationToken).AsTask();
+        }
+
+        public ValueTask<FlushResult> WriteDataToPipeAsync(ReadOnlySpan<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new ValueTask<FlushResult>(Task.FromCanceled<FlushResult>(cancellationToken));
+            }
+
             return WriteAsync(buffer, cancellationToken);
         }
 
-        public Task WriteStreamSuffixAsync()
+        public ValueTask<FlushResult> WriteStreamSuffixAsync()
         {
             return WriteAsync(_endChunkedResponseBytes.Span);
         }
 
-        public Task FlushAsync(CancellationToken cancellationToken = default)
+        public ValueTask<FlushResult> FlushAsync(CancellationToken cancellationToken = default)
         {
             return WriteAsync(Constants.EmptyData, cancellationToken);
         }
 
-        public Task WriteAsync<T>(Func<PipeWriter, T, long> callback, T state, CancellationToken cancellationToken)
+        public Memory<byte> GetMemory(int sizeHint = 0)
+        {
+            return _pipeWriter.GetMemory(sizeHint);
+        }
+
+        public Span<byte> GetSpan(int sizeHint = 0)
+        {
+            return _pipeWriter.GetSpan(sizeHint);
+        }
+
+        public void Advance(int bytes)
+        {
+            _pipeWriter.Advance(bytes);
+        }
+
+        public void CancelPendingFlush()
+        {
+            _pipeWriter.CancelPendingFlush();
+        }
+
+        // This method is for chunked http responses
+        public ValueTask<FlushResult> WriteAsync<T>(Func<PipeWriter, T, long> callback, T state, CancellationToken cancellationToken)
         {
             lock (_contextLock)
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return CompleteFlushTask;
                 }
 
                 var buffer = _pipeWriter;
@@ -145,12 +178,12 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             }
         }
 
-        public Task Write100ContinueAsync()
+        public ValueTask<FlushResult>  Write100ContinueAsync()
         {
             return WriteAsync(_continueBytes.Span);
         }
 
-        private Task WriteAsync(
+        private ValueTask<FlushResult> WriteAsync(
             ReadOnlySpan<byte> buffer,
             CancellationToken cancellationToken = default)
         {
@@ -158,7 +191,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             {
                 if (_completed)
                 {
-                    return Task.CompletedTask;
+                    return CompleteFlushTask;
                 }
 
                 var writer = new BufferWriter<PipeWriter>(_pipeWriter);
