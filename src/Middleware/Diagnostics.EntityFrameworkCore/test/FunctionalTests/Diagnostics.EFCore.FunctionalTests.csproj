@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <!-- Mitigation for long path issues -->
     <AssemblyName>Diagnostics.EFCore.FunctionalTests</AssemblyName>
+    <!-- https://github.com/dotnet/core-eng/issues/5032 -->
     <BuildHelixPayload>false</BuildHelixPayload>
   </PropertyGroup>
 
