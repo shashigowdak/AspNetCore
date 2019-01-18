@@ -182,7 +182,6 @@ namespace System.IO.Pipelines
                             Logger?.LogInformation("Starting WriteAsync call on underlying stream.");
                             await _writingStream.WriteAsync(segment.Buffer.Slice(0, segment.Length), localToken);
                             Logger?.LogInformation("WriteAsync Completed.");
-
 #elif NETSTANDARD2_0
                             MemoryMarshal.TryGetArray<byte>(segment.Buffer, out var arraySegment);
                             await _writingStream.WriteAsync(arraySegment.Array, 0, segment.Length, localToken);
@@ -201,7 +200,6 @@ namespace System.IO.Pipelines
                         Logger?.LogInformation("Starting WriteAsync call on underlying stream.");
                         await _writingStream.WriteAsync(_currentSegment.Slice(0, _position), localToken);
                         Logger?.LogInformation("WriteAsync Completed.");
-
 #elif NETSTANDARD2_0
                         MemoryMarshal.TryGetArray<byte>(_currentSegment, out var arraySegment);
                         await _writingStream.WriteAsync(arraySegment.Array, 0, _position, localToken);
@@ -231,6 +229,7 @@ namespace System.IO.Pipelines
 
                     if (cancellationToken.IsCancellationRequested)
                     {
+                        Logger?.LogInformation($"Cancellation requested, throwing.");
                         throw;
                     }
 
