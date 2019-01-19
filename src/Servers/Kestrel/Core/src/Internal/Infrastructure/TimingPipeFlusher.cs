@@ -23,7 +23,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
 
         private readonly object _flushLock = new object();
         // TODO allocations here.
-        private ValueTask<FlushResult> _lastFlushTask = new ValueTask<FlushResult>(new FlushResult());
+        private Task<FlushResult> _lastFlushTask = null;
         private readonly FlushResult _emptyFlushResult = new FlushResult();
 
         public TimingPipeFlusher(
@@ -72,9 +72,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
             // we find previous flush Task which still accounts for any newly committed bytes and await that.
             lock (_flushLock)
             {
-                if (_lastFlushTask.IsCompleted)
+                if (_lastFlushTask == null || _lastFlushTask.IsCompleted)
                 {
-                    _lastFlushTask = flushValueTask;
+                    _lastFlushTask = flushValueTask.AsTask();
                 }
 
                 return TimeFlushAsync(minRate, count, outputAborter, cancellationToken);

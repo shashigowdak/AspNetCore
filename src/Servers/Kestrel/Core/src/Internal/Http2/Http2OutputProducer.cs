@@ -223,11 +223,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
                 minimumSegmentSize: KestrelMemoryPool.MinimumSegmentSize
             ));
 
-        ValueTask<FlushResult> IHttpOutputProducer.WriteAsync<T>(Func<PipeWriter, T, long> callback, T state, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
         public ValueTask<FlushResult> FlushAsync(CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -298,6 +293,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
                 _dataPipe.Writer.Write(data);
                 return _flusher.FlushAsync(this, cancellationToken);
             }
+        }
+
+        ValueTask<FlushResult> IHttpOutputProducer.WriteAsync<T>(Func<PipeWriter, T, long> callback, T state, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }
