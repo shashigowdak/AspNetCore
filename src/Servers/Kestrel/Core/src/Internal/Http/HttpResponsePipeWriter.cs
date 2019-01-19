@@ -13,12 +13,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
     public class HttpResponsePipeWriter : PipeWriter
     {
         private HttpStreamState _state;
-        private readonly IHttpBodyControlFeature _bodyControl;
         private readonly IHttpResponsePipeWriterControl _pipeControl;
 
-        public HttpResponsePipeWriter(IHttpBodyControlFeature bodyControl, IHttpResponsePipeWriterControl pipeControl)
+        public HttpResponsePipeWriter(IHttpResponsePipeWriterControl pipeControl)
         {
-            _bodyControl = bodyControl;
             _pipeControl = pipeControl;
             _state = HttpStreamState.Closed;
         }

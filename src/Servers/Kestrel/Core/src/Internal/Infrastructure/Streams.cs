@@ -22,7 +22,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
         {
             _request = new HttpRequestStream(bodyControl);
             _emptyRequest = new HttpRequestStream(bodyControl);
-            _response = new HttpResponseStream(writer);
+            _response = new HttpResponseStream(bodyControl, writer);
             _upgradeableResponse = new WrappingStream(_response);
             _upgradeStream = new HttpUpgradeStream(_request, _response);
         }

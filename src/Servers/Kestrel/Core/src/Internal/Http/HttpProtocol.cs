@@ -299,7 +299,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             if (_streams == null)
             {
                 // TODO what to do with pipeWriter (expose it, duh, but how to do it cleanly)
-                var pipeWriter = new HttpResponsePipeWriter(this, this);
+                var pipeWriter = new HttpResponsePipeWriter(this);
                 _streams = new Streams(bodyControl: this, pipeWriter);
             }
 

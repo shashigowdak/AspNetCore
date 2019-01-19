@@ -17,11 +17,33 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
     internal class HttpResponseStream : WriteOnlyPipeStream
     {
         private readonly HttpResponsePipeWriter _pipeWriter;
+        private readonly IHttpBodyControlFeature _bodyControl;
 
-        public HttpResponseStream(HttpResponsePipeWriter pipeWriter)
+        public HttpResponseStream(IHttpBodyControlFeature bodyControl, HttpResponsePipeWriter pipeWriter)
             : base(pipeWriter)
         {
+            _bodyControl = bodyControl;
             _pipeWriter = pipeWriter;
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            if (!_bodyControl.AllowSynchronousIO)
+            {
+                throw new InvalidOperationException(CoreStrings.SynchronousWritesDisallowed);
+            }
+
+            base.Write(buffer, offset, count);
+        }
+
+        public override void Flush()
+        {
+            if (!_bodyControl.AllowSynchronousIO)
+            {
+                throw new InvalidOperationException(CoreStrings.SynchronousWritesDisallowed);
+            }
+
+            base.Flush();
         }
 
         public void StartAcceptingWrites()
