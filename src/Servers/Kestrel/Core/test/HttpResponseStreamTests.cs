@@ -96,10 +96,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         [Fact]
         public async Task StopAcceptingWritesCausesWriteToThrowObjectDisposedException()
         {
-            var pipeWriter = new HttpResponsePipeWriter(Mock.Of<IHttpResponsePipeWriterControl>());
+            var pipeWriter = new HttpResponsePipeWriter(Mock.Of<IHttpResponseControl>());
             var stream = new HttpResponseStream(Mock.Of<IHttpBodyControlFeature>(), pipeWriter);
             stream.StartAcceptingWrites();
             stream.StopAcceptingWrites();
+            // This test had to change to awaiting the stream.WriteAsync
             var ex = await Assert.ThrowsAsync<ObjectDisposedException>(async () => { await stream.WriteAsync(new byte[1], 0, 1); });
             Assert.Contains(CoreStrings.WritingToResponseBodyAfterResponseCompleted, ex.Message);
         }
@@ -110,7 +111,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             var allowSynchronousIO = false;
             var mockBodyControl = new Mock<IHttpBodyControlFeature>();
             mockBodyControl.Setup(m => m.AllowSynchronousIO).Returns(() => allowSynchronousIO);
-            var mockHttpResponseControl = new Mock<IHttpResponsePipeWriterControl>();
+            var mockHttpResponseControl = new Mock<IHttpResponseControl>();
             mockHttpResponseControl.Setup(m => m.WritePipeAsync(It.IsAny<ReadOnlyMemory<byte>>(), CancellationToken.None)).Returns(new ValueTask<FlushResult>(new FlushResult()));
 
             var pipeWriter = new HttpResponsePipeWriter(mockHttpResponseControl.Object);
@@ -130,9 +131,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
 
         private static HttpResponseStream CreateMockHttpResponseStream()
         {
-            var stream = CreateMockHttpResponseStream();
-            return stream;
+            var pipeWriter = new HttpResponsePipeWriter(Mock.Of<IHttpResponseControl>());
+            return new HttpResponseStream(Mock.Of<IHttpBodyControlFeature>(), pipeWriter);
         }
-
     }
 }

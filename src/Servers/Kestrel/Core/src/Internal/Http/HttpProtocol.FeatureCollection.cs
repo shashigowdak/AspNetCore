@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.IO.Pipelines;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +21,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                                         IHttpRequestLifetimeFeature,
                                         IHttpRequestIdentifierFeature,
                                         IHttpBodyControlFeature,
-                                        IHttpMaxRequestBodySizeFeature
+                                        IHttpMaxRequestBodySizeFeature,
+                                        IResponseBodyPipeFeature
     {
         // NOTE: When feature interfaces are added to or removed from this HttpProtocol class implementation,
         // then the list of `implementedFeatures` in the generated code project MUST also be updated.
@@ -190,6 +192,12 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
                 MaxRequestBodySize = value;
             }
+        }
+
+        public PipeWriter ResponseBodyPipe
+        {
+            get => ResponsePipeWriter;
+            set => ResponsePipeWriter = value;
         }
 
         protected void ResetHttp1Features()

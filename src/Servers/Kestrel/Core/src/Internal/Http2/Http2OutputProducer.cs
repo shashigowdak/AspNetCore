@@ -32,8 +32,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
         private bool _completed;
         private bool _disposed;
 
-        private ValueTask<FlushResult> _completedFlushResult = new ValueTask<FlushResult>(new FlushResult());
-
         public Http2OutputProducer(
             int streamId,
             Http2FrameWriter frameWriter,
@@ -96,7 +94,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             {
                 if (_completed)
                 {
-                    return _completedFlushResult;
+                    return default;
                 }
 
                 return _frameWriter.Write100ContinueAsync(_streamId);
@@ -147,7 +145,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             {
                 if (_completed)
                 {
-                    return _completedFlushResult;
+                    return default;
                 }
 
                 _completed = true;
@@ -234,7 +232,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             {
                 if (_completed)
                 {
-                    return _completedFlushResult;
+                    return default;
                 }
 
                 if (_startedWritingDataFrames)
@@ -285,7 +283,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
                 // frame will actually be written causing the headers to be flushed.
                 if (_completed || data.Length == 0)
                 {
-                    return _completedFlushResult;
+                    return default;
                 }
 
                 _startedWritingDataFrames = true;

@@ -44,7 +44,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             };
 
             Http1Connection = new Http1Connection(Http1ConnectionContext);
-            Http1Connection.HttpResponseControl = Mock.Of<IHttpResponsePipeWriterControl>();
+            Http1Connection.HttpResponseControl = Mock.Of<IHttpResponseControl>();
             Http1Connection.Reset();
         }
 

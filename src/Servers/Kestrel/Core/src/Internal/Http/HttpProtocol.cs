@@ -24,7 +24,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 {
-    public abstract partial class HttpProtocol : IHttpContextContainer, IHttpResponsePipeWriterControl
+    public abstract partial class HttpProtocol : IHttpContextContainer, IHttpResponseControl
     {
         private static readonly byte[] _bytesConnectionClose = Encoding.ASCII.GetBytes("\r\nConnection: close");
         private static readonly byte[] _bytesConnectionKeepAlive = Encoding.ASCII.GetBytes("\r\nConnection: keep-alive");
@@ -77,7 +77,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             HttpResponseControl = this;
         }
 
-        public IHttpResponsePipeWriterControl HttpResponseControl { get; set; }
+        public IHttpResponseControl HttpResponseControl { get; set; }
 
         public Pipe RequestBodyPipe { get; protected set; }
 
@@ -232,6 +232,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
         public IHeaderDictionary ResponseHeaders { get; set; }
         public Stream ResponseBody { get; set; }
+        public PipeWriter ResponsePipeWriter { get; set; }
 
         public CancellationToken RequestAborted
         {
@@ -298,9 +299,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         {
             if (_streams == null)
             {
-                // TODO what to do with pipeWriter (expose it, duh, but how to do it cleanly)
+                // TODO we may want to create another class to wrap the pipeReader/writer.
                 var pipeWriter = new HttpResponsePipeWriter(this);
                 _streams = new Streams(bodyControl: this, pipeWriter);
+                ResponsePipeWriter = pipeWriter;
             }
 
             (RequestBody, ResponseBody) = _streams.Start(messageBody);
@@ -1276,8 +1278,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             Output.CancelPendingFlush();
         }
 
-        private static ValueTask<FlushResult> CompletedFlushTask = new ValueTask<FlushResult>(new FlushResult());
-
         public ValueTask<FlushResult> WritePipeAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
         {
             // For the first write, ensure headers are flushed if WriteDataAsync isn't called.
@@ -1303,7 +1303,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                 {
                     if (data.Length == 0)
                     {
-                        return !firstWrite ? CompletedFlushTask : FlushPipeAsync(cancellationToken);
+                        return !firstWrite ? default : FlushPipeAsync(cancellationToken);
                     }
                     return WriteChunkedAsync(data, cancellationToken);
                 }
@@ -1316,7 +1316,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             else
             {
                 HandleNonBodyResponseWrite();
-                return !firstWrite ? CompletedFlushTask : FlushPipeAsync(cancellationToken);
+                return !firstWrite ? default : FlushPipeAsync(cancellationToken);
             }
         }
 

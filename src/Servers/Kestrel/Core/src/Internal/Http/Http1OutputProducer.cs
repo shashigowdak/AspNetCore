@@ -26,8 +26,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         private readonly IHttpMinResponseDataRateFeature _minResponseDataRateFeature;
         private readonly TimingPipeFlusher _flusher;
 
-        private static ValueTask<FlushResult> CompleteFlushTask = new ValueTask<FlushResult>(new FlushResult());
-
         // This locks access to to all of the below fields
         private readonly object _contextLock = new object();
 
@@ -110,7 +108,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             {
                 if (_completed)
                 {
-                    return CompleteFlushTask;
+                    return default;
                 }
 
                 var buffer = _pipeWriter;
@@ -191,7 +189,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             {
                 if (_completed)
                 {
-                    return CompleteFlushTask;
+                    return default;
                 }
 
                 var writer = new BufferWriter<PipeWriter>(_pipeWriter);
