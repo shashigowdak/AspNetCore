@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.136
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28407.52
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{DAAE4C74-D06F-4874-A166-33305D2643CE}"
 EndProject
@@ -273,6 +273,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AspNetCore.DataProtection.Abstractions", "..\DataProtection\Abstractions\src\Microsoft.AspNetCore.DataProtection.Abstractions.csproj", "{C75C6E51-4FFD-4902-8739-9109E51875B4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenericHostWebSite", "test\WebSites\GenericHostWebSite\GenericHostWebSite.csproj", "{D9BE3E50-5CE8-4D8D-BA19-AA219D009752}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AspNetCore.Components", "..\Components\Components\src\Microsoft.AspNetCore.Components.csproj", "{9C933F42-C167-4C51-96C8-CE9BF3B6F852}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1592,6 +1594,18 @@ Global
 		{D9BE3E50-5CE8-4D8D-BA19-AA219D009752}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{D9BE3E50-5CE8-4D8D-BA19-AA219D009752}.Release|x86.ActiveCfg = Release|Any CPU
 		{D9BE3E50-5CE8-4D8D-BA19-AA219D009752}.Release|x86.Build.0 = Release|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Debug|x86.Build.0 = Debug|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Release|x86.ActiveCfg = Release|Any CPU
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1710,6 +1724,7 @@ Global
 		{848E2620-EAF9-4BFD-8810-4AF71E09A8FB} = {9328599D-A7AF-43BC-BE08-7503DF9B8CE6}
 		{C75C6E51-4FFD-4902-8739-9109E51875B4} = {9328599D-A7AF-43BC-BE08-7503DF9B8CE6}
 		{D9BE3E50-5CE8-4D8D-BA19-AA219D009752} = {16703B76-C9F7-4C75-AE6C-53D92E308E3C}
+		{9C933F42-C167-4C51-96C8-CE9BF3B6F852} = {5FE3048A-E96B-44F8-A7C4-FC590D7E04B4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {63D344F6-F86D-40E6-85B9-0AABBE338C4A}
