@@ -32,7 +32,10 @@ namespace Microsoft.AspNetCore.Blazor.Rendering
         }
 
         internal void DispatchBrowserEvent(int componentId, int eventHandlerId, UIEventArgs eventArgs)
-            => DispatchEvent(componentId, eventHandlerId, eventArgs);
+        {
+            // Event dispatching from the browser is fire-and-forget
+            _ = DispatchEventAsync(componentId, eventHandlerId, eventArgs);
+        }
 
         /// <summary>
         /// Attaches a new root component to the renderer,

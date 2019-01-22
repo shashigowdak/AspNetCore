@@ -21,7 +21,7 @@ namespace Microsoft.AspNetCore.Components.Browser
         {
             var eventArgs = ParseEventArgsJson(eventDescriptor.EventArgsType, eventArgsJson);
             var renderer = RendererRegistry.Current.Find(eventDescriptor.BrowserRendererId);
-            renderer.DispatchEvent(
+            renderer.DispatchEventAsync(
                 eventDescriptor.ComponentId,
                 eventDescriptor.EventHandlerId,
                 eventArgs);

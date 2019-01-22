@@ -97,11 +97,11 @@ namespace Microsoft.AspNetCore.Components.Rendering
             }
         }
 
-        public void DispatchEvent(EventHandlerInvoker binding, UIEventArgs eventArgs)
+        public Task DispatchEventAsync(EventHandlerInvoker binding, UIEventArgs eventArgs)
         {
             if (_component is IHandleEvent handleEventComponent)
             {
-                handleEventComponent.HandleEvent(binding, eventArgs);
+                return handleEventComponent.HandleEventAsync(binding, eventArgs);
             }
             else
             {

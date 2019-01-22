@@ -276,41 +276,6 @@ namespace Microsoft.AspNetCore.Components
             }
         }
 
-        private async void ContinueAfterLifecycleTask(Task task)
-        {
-            switch (task == null ? TaskStatus.RanToCompletion : task.Status)
-            {
-                // If it's already completed synchronously, no need to await and no
-                // need to issue a further render (we already rerender synchronously).
-                // Just need to make sure we propagate any errors.
-                case TaskStatus.RanToCompletion:
-                case TaskStatus.Canceled:
-                    break;
-                case TaskStatus.Faulted:
-                    HandleException(task.Exception);
-                    break;
-
-                // For incomplete tasks, automatically re-render on successful completion
-                default:
-                    try
-                    {
-                        await task;
-                        StateHasChanged();
-                    }
-                    catch (Exception ex)
-                    {
-                        // Either the task failed, or it was cancelled, or StateHasChanged threw.
-                        // We want to report task failure or StateHasChanged exceptions only.
-                        if (!task.IsCanceled)
-                        {
-                            HandleException(ex);
-                        }
-                    }
-
-                    break;
-            }
-        }
-
         private static void HandleException(Exception ex)
         {
             if (ex is AggregateException && ex.InnerException != null)
@@ -322,15 +287,19 @@ namespace Microsoft.AspNetCore.Components
             Console.Error.WriteLine($"[{ex.GetType().FullName}] {ex.Message}\n{ex.StackTrace}");
         }
 
-        void IHandleEvent.HandleEvent(EventHandlerInvoker binding, UIEventArgs args)
+        Task IHandleEvent.HandleEventAsync(EventHandlerInvoker binding, UIEventArgs args)
         {
             var task = binding.Invoke(args);
-            ContinueAfterLifecycleTask(task);
+            var (isAsync, asyncTask) = ProcessLifeCycletask(task);
 
-            // After each event, we synchronously re-render (unless !ShouldRender())
-            // This just saves the developer the trouble of putting "StateHasChanged();"
-            // at the end of every event callback.
             StateHasChanged();
+
+            if (isAsync)
+            {
+                return asyncTask;
+            }
+
+            return Task.CompletedTask;
         }
 
         void IHandleAfterRender.OnAfterRender()

@@ -235,23 +235,33 @@ namespace Microsoft.AspNetCore.Components.Rendering
         /// </summary>
         /// <param name="componentId">The unique identifier for the component within the scope of this <see cref="Renderer"/>.</param>
         /// <param name="eventHandlerId">The <see cref="RenderTreeFrame.AttributeEventHandlerId"/> value from the original event attribute.</param>
-        /// <param name="eventArgs">Arguments to be passed to the event handler.</param>
-        public void DispatchEvent(int componentId, int eventHandlerId, UIEventArgs eventArgs)
+        /// <param name="eventArgs">Arguments to be passed to the event handler.</param
+        /// <returns>
+        /// A <see cref="Task"/> which will complete once all asynchronous processing related to the event
+        /// has completed.
+        /// </returns>
+        public Task DispatchEventAsync(int componentId, int eventHandlerId, UIEventArgs eventArgs)
         {
             if (_eventBindings.TryGetValue(eventHandlerId, out var binding))
             {
                 // The event handler might request multiple renders in sequence. Capture them
                 // all in a single batch.
+                Task task;
                 try
                 {
                     _isBatchInProgress = true;
-                    GetRequiredComponentState(componentId).DispatchEvent(binding, eventArgs);
+                    task =  GetRequiredComponentState(componentId).DispatchEventAsync(binding, eventArgs);
                 }
                 finally
                 {
                     _isBatchInProgress = false;
                     ProcessRenderQueue();
                 }
+
+                // Note that we process rendering updates without awaiting the event's task. This supports
+                // updating the UI immediately in response to an end-user action, and deferring a more substantial
+                // update after async work (DB access, HTTP call).
+                return task;
             }
             else
             {

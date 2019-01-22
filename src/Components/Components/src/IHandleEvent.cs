@@ -1,5 +1,7 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
+using System.Threading.Tasks;
 
 namespace Microsoft.AspNetCore.Components
 {
@@ -13,6 +15,6 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         /// <param name="binding">The event binding.</param>
         /// <param name="args">Arguments for the event handler.</param>
-        void HandleEvent(EventHandlerInvoker binding, UIEventArgs args);
+        Task HandleEventAsync(EventHandlerInvoker binding, UIEventArgs args);
     }
 }
