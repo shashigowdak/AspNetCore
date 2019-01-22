@@ -1,6 +1,4 @@
-import { System_Array, MethodHandle } from '../Platform/Platform';
-import { RenderBatch, ArraySegment, ArrayRange, RenderTreeEdit, RenderTreeFrame, EditType, FrameType, ArrayValues } from './RenderBatch/RenderBatch';
-import { platform } from '../Environment';
+import { RenderBatch, ArraySegment, RenderTreeEdit, RenderTreeFrame, EditType, FrameType, ArrayValues } from './RenderBatch/RenderBatch';
 import { EventDelegator } from './EventDelegator';
 import { EventForDotNet, UIEventArgs } from './EventForDotNet';
 import { LogicalElement, toLogicalElement, insertLogicalChild, removeLogicalChild, getLogicalParent, getLogicalChild, createAndInsertLogicalContainer, isSvgElement } from './LogicalElements';
@@ -9,8 +7,6 @@ const selectValuePropname = '_blazorSelectValue';
 const sharedTemplateElemForParsing = document.createElement('template');
 const sharedSvgElemForParsing = document.createElementNS('http://www.w3.org/2000/svg', 'g');
 const preventDefaultEvents: { [eventType: string]: boolean } = { submit: true };
-let raiseEventMethod: MethodHandle;
-let renderComponentMethod: MethodHandle;
 
 export class BrowserRenderer {
   private eventDelegator: EventDelegator;
