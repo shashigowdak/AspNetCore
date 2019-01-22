@@ -31,12 +31,6 @@ namespace Microsoft.AspNetCore.Blazor.Rendering
             _webAssemblyRendererId = RendererRegistry.Current.Add(this);
         }
 
-        internal void DispatchBrowserEvent(int componentId, int eventHandlerId, UIEventArgs eventArgs)
-        {
-            // Event dispatching from the browser is fire-and-forget
-            _ = DispatchEventAsync(componentId, eventHandlerId, eventArgs);
-        }
-
         /// <summary>
         /// Attaches a new root component to the renderer,
         /// causing it to be displayed in the specified DOM element.
