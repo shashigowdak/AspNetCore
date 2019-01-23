@@ -74,7 +74,11 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<string> setter, string existingValue)
         {
-            return _ => setter((string)((UIChangeEventArgs)_).Value);
+            return _ =>
+            {
+                setter((string)((UIChangeEventArgs)_).Value);
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -82,7 +86,11 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<bool> setter, bool existingValue)
         {
-            return _ => setter((bool)((UIChangeEventArgs)_).Value);
+            return _ =>
+            {
+                setter((bool)((UIChangeEventArgs)_).Value);
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -90,7 +98,11 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<bool?> setter, bool? existingValue)
         {
-            return _ => setter((bool?)((UIChangeEventArgs)_).Value);
+            return _ =>
+            {
+                setter((bool?)((UIChangeEventArgs)_).Value);
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -98,7 +110,11 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<int> setter, int existingValue)
         {
-            return _ => setter(int.Parse((string)((UIChangeEventArgs)_).Value));
+            return _ =>
+            {
+                setter(int.Parse((string)((UIChangeEventArgs)_).Value));
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -106,9 +122,13 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<int?> setter, int? existingValue)
         {
-            return _ => setter(int.TryParse((string)((UIChangeEventArgs)_).Value, out var tmpvalue)
+            return _ =>
+            {
+                setter(int.TryParse((string)((UIChangeEventArgs)_).Value, out var tmpvalue)
                 ? tmpvalue
                 : (int?)null);
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -116,7 +136,11 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<long> setter, long existingValue)
         {
-            return _ => setter(long.Parse((string)((UIChangeEventArgs)_).Value));
+            return _ =>
+            {
+                setter(long.Parse((string)((UIChangeEventArgs)_).Value));
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -124,9 +148,13 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<long?> setter, long? existingValue)
         {
-            return _ => setter(long.TryParse((string)((UIChangeEventArgs)_).Value, out var tmpvalue)
+            return _ =>
+            {
+                setter(long.TryParse((string)((UIChangeEventArgs)_).Value, out var tmpvalue)
                 ? tmpvalue
                 : (long?)null);
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -134,7 +162,11 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<float> setter, float existingValue)
         {
-            return _ => setter(float.Parse((string)((UIChangeEventArgs)_).Value));
+            return _ =>
+            {
+                setter(float.Parse((string)((UIChangeEventArgs)_).Value));
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -142,9 +174,13 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<float?> setter, float? existingValue)
         {
-            return _ => setter(float.TryParse((string)((UIChangeEventArgs)_).Value, out var tmpvalue)
+            return _ =>
+            {
+                setter(float.TryParse((string)((UIChangeEventArgs)_).Value, out var tmpvalue)
                 ? tmpvalue
                 : (float?)null);
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -152,7 +188,11 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<double> setter, double existingValue)
         {
-            return _ => setter(double.Parse((string)((UIChangeEventArgs)_).Value));
+            return _ =>
+            {
+                setter(double.Parse((string)((UIChangeEventArgs)_).Value));
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -160,9 +200,13 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<double?> setter, double? existingValue)
         {
-            return _ => setter(double.TryParse((string)((UIChangeEventArgs)_).Value, out var tmpvalue)
+            return _ =>
+            {
+                setter(double.TryParse((string)((UIChangeEventArgs)_).Value, out var tmpvalue)
                 ? tmpvalue
                 : (double?)null);
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -170,7 +214,11 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<decimal> setter, decimal existingValue)
         {
-            return _ => setter(decimal.Parse((string)((UIChangeEventArgs)_).Value));
+            return _ =>
+            {
+                setter(decimal.Parse((string)((UIChangeEventArgs)_).Value));
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -178,9 +226,13 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<decimal?> setter, decimal? existingValue)
         {
-            return _ => setter(decimal.TryParse((string)((UIChangeEventArgs)_).Value, out var tmpvalue)
+            return _ =>
+            {
+                setter(decimal.TryParse((string)((UIChangeEventArgs)_).Value, out var tmpvalue)
                 ? tmpvalue
                 : (decimal?)null);
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
+            };
         }
 
         /// <summary>
@@ -188,7 +240,10 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<DateTime> setter, DateTime existingValue)
         {
-            return _ => SetDateTimeValue(setter, ((UIChangeEventArgs)_).Value, null);
+            return _ =>
+            {
+                SetDateTimeValue(setter, ((UIChangeEventArgs)_).Value, null);
+            };
         }
 
         /// <summary>
@@ -196,7 +251,10 @@ namespace Microsoft.AspNetCore.Components
         /// </summary>
         public static Action<UIEventArgs> SetValueHandler(Action<DateTime> setter, DateTime existingValue, string format)
         {
-            return _ => SetDateTimeValue(setter, ((UIChangeEventArgs)_).Value, format);
+            return _ =>
+            {
+                SetDateTimeValue(setter, ((UIChangeEventArgs)_).Value, format);
+            };
         }
 
         /// <summary>
@@ -214,6 +272,7 @@ namespace Microsoft.AspNetCore.Components
                 var value = (string)((UIChangeEventArgs)_).Value;
                 var parsed = (T)Enum.Parse(typeof(T), value);
                 setter(parsed);
+                ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
             };
         }
 
@@ -224,6 +283,7 @@ namespace Microsoft.AspNetCore.Components
                 : format != null && DateTime.TryParseExact(stringValue, format, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsedExact) ? parsedExact
                 : DateTime.Parse(stringValue);
             setter(parsedValue);
+            ComponentBase.DispatchStateChangeAsync(setter.Target, Task.CompletedTask);
         }
     }
 }

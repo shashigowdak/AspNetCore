@@ -23,7 +23,7 @@ namespace Microsoft.AspNetCore.Components
     /// Optional base class for components. Alternatively, components may
     /// implement <see cref="IComponent"/> directly.
     /// </summary>
-    public abstract class ComponentBase : IComponent, IHandleEvent, IHandleAfterRender
+    public abstract class ComponentBase : IComponent, IHandleStateChange, IHandleAfterRender
     {
         /// <summary>
         /// Specifies the name of the <see cref="RenderTree"/>-building method.
@@ -157,6 +157,38 @@ namespace Microsoft.AspNetCore.Components
         protected Task InvokeAsync(Func<Task> workItem)
             => _renderHandle.InvokeAsync(workItem);
 
+        /// <summary>
+        /// Dispatches a state change notification to the provided component.
+        /// </summary>
+        /// <param name="component">The component instance.</param>
+        /// <param name="invoker">The <see cref="EventHandlerInvoker"/></param>
+        /// <param name="args">The event args.</param>
+        /// <returns>
+        /// A <see cref="Task" /> that asynchronously completes once event processing has completed.
+        /// </returns>
+        public static Task DispatchStateChangeAsync(object component, EventHandlerInvoker invoker, UIEventArgs args)
+        {
+            return DispatchStateChangeAsync(component, invoker.Invoke(args));
+        }
+
+        /// <summary>
+        /// Dispatches a state change notification to the provided component.
+        /// </summary>
+        /// <param name="component">The component instance.</param>
+        /// <param name="task">A <see cref="Task"/> that represents the state change.</param>
+        /// <returns>
+        /// A <see cref="Task" /> that asynchronously completes once event processing has completed.
+        /// </returns>
+        public static Task DispatchStateChangeAsync(object component, Task task)
+        {
+            if (component is IHandleStateChange handler)
+            {
+                return handler.HandleStateChangeAsync(task);
+            }
+
+            return task;
+        }
+
         void IComponent.Configure(RenderHandle renderHandle)
         {
             // This implicitly means a ComponentBase can only be associated with a single
@@ -287,9 +319,8 @@ namespace Microsoft.AspNetCore.Components
             Console.Error.WriteLine($"[{ex.GetType().FullName}] {ex.Message}\n{ex.StackTrace}");
         }
 
-        Task IHandleEvent.HandleEventAsync(EventHandlerInvoker binding, UIEventArgs args)
+        Task IHandleStateChange.HandleStateChangeAsync(Task task)
         {
-            var task = binding.Invoke(args);
             var (isAsync, asyncTask) = ProcessLifeCycletask(task);
 
             StateHasChanged();

@@ -82,7 +82,7 @@ namespace Microsoft.AspNetCore.Components.Rendering
         public void DisposeInBatch(RenderBatchBuilder batchBuilder)
         {
             _componentWasDisposed = true;
- 
+
             // TODO: Handle components throwing during dispose. Shouldn't break the whole render batch.
             if (_component is IDisposable disposable)
             {
@@ -94,20 +94,6 @@ namespace Microsoft.AspNetCore.Components.Rendering
             if (_hasAnyCascadingParameterSubscriptions)
             {
                 RemoveCascadingParameterSubscriptions();
-            }
-        }
-
-        public Task DispatchEventAsync(EventHandlerInvoker binding, UIEventArgs eventArgs)
-        {
-            if (_component is IHandleEvent handleEventComponent)
-            {
-                return handleEventComponent.HandleEventAsync(binding, eventArgs);
-            }
-            else
-            {
-                throw new InvalidOperationException(
-                    $"The component of type {_component.GetType().FullName} cannot receive " +
-                    $"events because it does not implement {typeof(IHandleEvent).FullName}.");
             }
         }
 
@@ -167,7 +153,7 @@ namespace Microsoft.AspNetCore.Components.Rendering
                     hasSubscription = true;
                 }
             }
-            
+
             return hasSubscription;
         }
 

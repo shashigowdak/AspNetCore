@@ -13,8 +13,8 @@ export class BrowserRenderer {
   private childComponentLocations: { [componentId: number]: LogicalElement } = {};
 
   constructor(private browserRendererId: number) {
-    this.eventDelegator = new EventDelegator((event, componentId, eventHandlerId, eventArgs) => {
-      raiseEvent(event, this.browserRendererId, componentId, eventHandlerId, eventArgs);
+    this.eventDelegator = new EventDelegator((event, eventHandlerId, eventArgs) => {
+      raiseEvent(event, this.browserRendererId, eventHandlerId, eventArgs);
     });
   }
 
@@ -28,7 +28,7 @@ export class BrowserRenderer {
       throw new Error(`No element is currently associated with component ${componentId}`);
     }
 
-    this.applyEdits(batch, componentId, element, 0, edits, referenceFrames);
+    this.applyEdits(batch, element, 0, edits, referenceFrames);
   }
 
   public disposeComponent(componentId: number) {
@@ -43,7 +43,7 @@ export class BrowserRenderer {
     this.childComponentLocations[componentId] = element;
   }
 
-  private applyEdits(batch: RenderBatch, componentId: number, parent: LogicalElement, childIndex: number, edits: ArraySegment<RenderTreeEdit>, referenceFrames: ArrayValues<RenderTreeFrame>) {
+  private applyEdits(batch: RenderBatch, parent: LogicalElement, childIndex: number, edits: ArraySegment<RenderTreeEdit>, referenceFrames: ArrayValues<RenderTreeFrame>) {
     let currentDepth = 0;
     let childIndexAtCurrentDepth = childIndex;
 
@@ -63,7 +63,7 @@ export class BrowserRenderer {
           const frameIndex = editReader.newTreeIndex(edit);
           const frame = batch.referenceFramesEntry(referenceFrames, frameIndex);
           const siblingIndex = editReader.siblingIndex(edit);
-          this.insertFrame(batch, componentId, parent, childIndexAtCurrentDepth + siblingIndex, referenceFrames, frame, frameIndex);
+          this.insertFrame(batch, parent, childIndexAtCurrentDepth + siblingIndex, referenceFrames, frame, frameIndex);
           break;
         }
         case EditType.removeFrame: {
@@ -77,7 +77,7 @@ export class BrowserRenderer {
           const siblingIndex = editReader.siblingIndex(edit);
           const element = getLogicalChild(parent, childIndexAtCurrentDepth + siblingIndex);
           if (element instanceof Element) {
-            this.applyAttribute(batch, componentId, element, frame);
+            this.applyAttribute(batch, element, frame);
           } else {
             throw new Error(`Cannot set attribute on non-element child`);
           }
@@ -141,12 +141,12 @@ export class BrowserRenderer {
     }
   }
 
-  private insertFrame(batch: RenderBatch, componentId: number, parent: LogicalElement, childIndex: number, frames: ArrayValues<RenderTreeFrame>, frame: RenderTreeFrame, frameIndex: number): number {
+  private insertFrame(batch: RenderBatch, parent: LogicalElement, childIndex: number, frames: ArrayValues<RenderTreeFrame>, frame: RenderTreeFrame, frameIndex: number): number {
     const frameReader = batch.frameReader;
     const frameType = frameReader.frameType(frame);
     switch (frameType) {
       case FrameType.element:
-        this.insertElement(batch, componentId, parent, childIndex, frames, frame, frameIndex);
+        this.insertElement(batch, parent, childIndex, frames, frame, frameIndex);
         return 1;
       case FrameType.text:
         this.insertText(batch, parent, childIndex, frame);
@@ -157,7 +157,7 @@ export class BrowserRenderer {
         this.insertComponent(batch, parent, childIndex, frame);
         return 1;
       case FrameType.region:
-        return this.insertFrameRange(batch, componentId, parent, childIndex, frames, frameIndex + 1, frameIndex + frameReader.subtreeLength(frame));
+        return this.insertFrameRange(batch, parent, childIndex, frames, frameIndex + 1, frameIndex + frameReader.subtreeLength(frame));
       case FrameType.elementReferenceCapture:
         if (parent instanceof Element) {
           applyCaptureIdToElement(parent, frameReader.elementReferenceCaptureId(frame)!);
@@ -174,7 +174,7 @@ export class BrowserRenderer {
     }
   }
 
-  private insertElement(batch: RenderBatch, componentId: number, parent: LogicalElement, childIndex: number, frames: ArrayValues<RenderTreeFrame>, frame: RenderTreeFrame, frameIndex: number) {
+  private insertElement(batch: RenderBatch, parent: LogicalElement, childIndex: number, frames: ArrayValues<RenderTreeFrame>, frame: RenderTreeFrame, frameIndex: number) {
     const frameReader = batch.frameReader;
     const tagName = frameReader.elementName(frame)!;
     const newDomElementRaw = tagName === 'svg' || isSvgElement(parent) ?
@@ -188,11 +188,11 @@ export class BrowserRenderer {
     for (let descendantIndex = frameIndex + 1; descendantIndex < descendantsEndIndexExcl; descendantIndex++) {
       const descendantFrame = batch.referenceFramesEntry(frames, descendantIndex);
       if (frameReader.frameType(descendantFrame) === FrameType.attribute) {
-        this.applyAttribute(batch, componentId, newDomElementRaw, descendantFrame);
+        this.applyAttribute(batch, newDomElementRaw, descendantFrame);
       } else {
         // As soon as we see a non-attribute child, all the subsequent child frames are
         // not attributes, so bail out and insert the remnants recursively
-        this.insertFrameRange(batch, componentId, newElement, 0, frames, descendantIndex, descendantsEndIndexExcl);
+        this.insertFrameRange(batch, newElement, 0, frames, descendantIndex, descendantsEndIndexExcl);
         break;
       }
     }
@@ -224,7 +224,7 @@ export class BrowserRenderer {
     }
   }
 
-  private applyAttribute(batch: RenderBatch, componentId: number, toDomElement: Element, attributeFrame: RenderTreeFrame) {
+  private applyAttribute(batch: RenderBatch, toDomElement: Element, attributeFrame: RenderTreeFrame) {
     const frameReader = batch.frameReader;
     const attributeName = frameReader.attributeName(attributeFrame)!;
     const browserRendererId = this.browserRendererId;
@@ -236,7 +236,7 @@ export class BrowserRenderer {
       if (firstTwoChars !== 'on' || !eventName) {
         throw new Error(`Attribute has nonzero event handler ID, but attribute name '${attributeName}' does not start with 'on'.`);
       }
-      this.eventDelegator.setListener(toDomElement, eventName, componentId, eventHandlerId);
+      this.eventDelegator.setListener(toDomElement, eventName, eventHandlerId);
       return;
     }
 
@@ -311,11 +311,11 @@ export class BrowserRenderer {
     }
   }
 
-  private insertFrameRange(batch: RenderBatch, componentId: number, parent: LogicalElement, childIndex: number, frames: ArrayValues<RenderTreeFrame>, startIndex: number, endIndexExcl: number): number {
+  private insertFrameRange(batch: RenderBatch, parent: LogicalElement, childIndex: number, frames: ArrayValues<RenderTreeFrame>, startIndex: number, endIndexExcl: number): number {
     const origChildIndex = childIndex;
     for (let index = startIndex; index < endIndexExcl; index++) {
       const frame = batch.referenceFramesEntry(frames, index);
-      const numChildrenInserted = this.insertFrame(batch, componentId, parent, childIndex, frames, frame, index);
+      const numChildrenInserted = this.insertFrame(batch, parent, childIndex, frames, frame, index);
       childIndex += numChildrenInserted;
 
       // Skip over any descendants, since they are already dealt with recursively
@@ -351,14 +351,13 @@ function countDescendantFrames(batch: RenderBatch, frame: RenderTreeFrame): numb
   }
 }
 
-function raiseEvent(event: Event, browserRendererId: number, componentId: number, eventHandlerId: number, eventArgs: EventForDotNet<UIEventArgs>) {
+function raiseEvent(event: Event, browserRendererId: number, eventHandlerId: number, eventArgs: EventForDotNet<UIEventArgs>) {
   if (preventDefaultEvents[event.type]) {
     event.preventDefault();
   }
 
   const eventDescriptor = {
     browserRendererId,
-    componentId,
     eventHandlerId,
     eventArgsType: eventArgs.type
   };
