@@ -13,7 +13,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         ValueTask<FlushResult> WriteAsync<T>(Func<PipeWriter, T, long> callback, T state, CancellationToken cancellationToken);
         ValueTask<FlushResult> FlushAsync(CancellationToken cancellationToken);
         ValueTask<FlushResult> Write100ContinueAsync();
-        void WriteResponseHeaders(int statusCode, string ReasonPhrase, HttpResponseHeaders responseHeaders);
+        void WriteResponseHeaders(int statusCode, string ReasonPhrase, HttpResponseHeaders responseHeaders, bool autoChunk);
         // This takes ReadOnlySpan instead of ReadOnlyMemory because it always synchronously copies data before flushing.
         ValueTask<FlushResult> WriteDataToPipeAsync(ReadOnlySpan<byte> data, CancellationToken cancellationToken);
         Task WriteDataAsync(ReadOnlySpan<byte> data, CancellationToken cancellationToken);

@@ -33,7 +33,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
         public override void Complete(Exception exception = null)
         {
-            // I think this should noop
+            // TODO think about this
         }
 
         public override ValueTask<FlushResult> FlushAsync(CancellationToken cancellationToken = default)

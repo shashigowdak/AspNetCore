@@ -194,7 +194,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             }
         }
 
-        public PipeWriter ResponseBodyPipe
+        PipeWriter IResponseBodyPipeFeature.ResponseBodyPipe
         {
             get => ResponsePipeWriter;
             set => ResponsePipeWriter = value;

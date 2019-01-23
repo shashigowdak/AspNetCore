@@ -1113,7 +1113,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                 responseHeaders.SetRawDate(dateHeaderValues.String, dateHeaderValues.Bytes);
             }
 
-            Output.WriteResponseHeaders(StatusCode, ReasonPhrase, responseHeaders);
+            Output.WriteResponseHeaders(StatusCode, ReasonPhrase, responseHeaders, _autoChunk);
         }
 
         public bool StatusCanHaveBody(int statusCode)

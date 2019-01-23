@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -17,8 +18,17 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
 {
     public class ConnectionAdapterTests : TestApplicationErrorLoggerLoggedTest
     {
-        [Fact]
-        public async Task CanReadAndWriteWithRewritingConnectionAdapter()
+
+        public static TheoryData<RequestDelegate> EchoAppRequestDelegates =>
+            new TheoryData<RequestDelegate>
+            {
+                { TestApp.EchoApp },
+                { TestApp.EchoAppPipeWriter }
+            };
+
+        [Theory]
+        [MemberData(nameof(EchoAppRequestDelegates))]
+        public async Task CanReadAndWriteWithRewritingConnectionAdapter(RequestDelegate requestDelegate)
         {
             var adapter = new RewritingConnectionAdapter();
             var listenOptions = new ListenOptions(new IPEndPoint(IPAddress.Loopback, 0))
@@ -30,7 +40,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
 
             var sendString = "POST / HTTP/1.0\r\nContent-Length: 12\r\n\r\nHello World?";
 
-            using (var server = new TestServer(TestApp.EchoApp, serviceContext, listenOptions))
+            using (var server = new TestServer(requestDelegate, serviceContext, listenOptions))
             {
                 using (var connection = server.CreateConnection())
                 {
@@ -49,8 +59,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
             Assert.Equal(sendString.Length, adapter.BytesRead);
         }
 
-        [Fact]
-        public async Task CanReadAndWriteWithAsyncConnectionAdapter()
+        [Theory]
+        [MemberData(nameof(EchoAppRequestDelegates))]
+        public async Task CanReadAndWriteWithAsyncConnectionAdapter(RequestDelegate requestDelegate)
         {
             var listenOptions = new ListenOptions(new IPEndPoint(IPAddress.Loopback, 0))
             {
@@ -59,7 +70,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
 
             var serviceContext = new TestServiceContext(LoggerFactory);
 
-            using (var server = new TestServer(TestApp.EchoApp, serviceContext, listenOptions))
+            using (var server = new TestServer(requestDelegate, serviceContext, listenOptions))
             {
                 using (var connection = server.CreateConnection())
                 {
@@ -79,8 +90,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
             }
         }
 
-        [Fact]
-        public async Task ImmediateFinAfterOnConnectionAsyncClosesGracefully()
+        [Theory]
+        [MemberData(nameof(EchoAppRequestDelegates))]
+        public async Task ImmediateFinAfterOnConnectionAsyncClosesGracefully(RequestDelegate requestDelegate)
         {
             var listenOptions = new ListenOptions(new IPEndPoint(IPAddress.Loopback, 0))
             {
@@ -89,7 +101,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
 
             var serviceContext = new TestServiceContext(LoggerFactory);
 
-            using (var server = new TestServer(TestApp.EchoApp, serviceContext, listenOptions))
+            using (var server = new TestServer(requestDelegate, serviceContext, listenOptions))
             {
                 using (var connection = server.CreateConnection())
                 {
@@ -101,8 +113,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
             }
         }
 
-        [Fact]
-        public async Task ImmediateFinAfterThrowingClosesGracefully()
+        [Theory]
+        [MemberData(nameof(EchoAppRequestDelegates))]
+        public async Task ImmediateFinAfterThrowingClosesGracefully(RequestDelegate requestDelegate)
         {
             var listenOptions = new ListenOptions(new IPEndPoint(IPAddress.Loopback, 0))
             {
@@ -111,7 +124,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
 
             var serviceContext = new TestServiceContext(LoggerFactory);
 
-            using (var server = new TestServer(TestApp.EchoApp, serviceContext, listenOptions))
+            using (var server = new TestServer(requestDelegate, serviceContext, listenOptions))
             {
                 using (var connection = server.CreateConnection())
                 {
@@ -123,8 +136,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
             }
         }
 
-        [Fact]
-        public async Task ImmediateShutdownAfterOnConnectionAsyncDoesNotCrash()
+        [Theory]
+        [MemberData(nameof(EchoAppRequestDelegates))]
+        public async Task ImmediateShutdownAfterOnConnectionAsyncDoesNotCrash(RequestDelegate requestDelegate)
         {
             var listenOptions = new ListenOptions(new IPEndPoint(IPAddress.Loopback, 0))
             {
@@ -134,7 +148,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
             var serviceContext = new TestServiceContext(LoggerFactory);
 
             var stopTask = Task.CompletedTask;
-            using (var server = new TestServer(TestApp.EchoApp, serviceContext, listenOptions))
+            using (var server = new TestServer(requestDelegate, serviceContext, listenOptions))
             {
                 using (var connection = server.CreateConnection())
                 {
@@ -145,8 +159,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
             }
         }
 
-        [Fact]
-        public async Task ThrowingSynchronousConnectionAdapterDoesNotCrashServer()
+        [Theory]
+        [MemberData(nameof(EchoAppRequestDelegates))]
+        public async Task ThrowingSynchronousConnectionAdapterDoesNotCrashServer(RequestDelegate requestDelegate)
         {
             var listenOptions = new ListenOptions(new IPEndPoint(IPAddress.Loopback, 0))
             {
@@ -155,7 +170,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
 
             var serviceContext = new TestServiceContext(LoggerFactory);
 
-            using (var server = new TestServer(TestApp.EchoApp, serviceContext, listenOptions))
+            using (var server = new TestServer(requestDelegate, serviceContext, listenOptions))
             {
                 using (var connection = server.CreateConnection())
                 {
@@ -187,6 +202,40 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
                 await context.Response.WriteAsync("Hello ");
                 await context.Response.Body.FlushAsync();
                 await context.Response.WriteAsync("World!");
+            }, serviceContext, listenOptions))
+            {
+                using (var connection = server.CreateConnection())
+                {
+                    await connection.Send(
+                        "GET / HTTP/1.0",
+                        "",
+                        "");
+                    await connection.ReceiveEnd(
+                        "HTTP/1.1 200 OK",
+                        "Connection: close",
+                        $"Date: {serviceContext.DateHeaderValue}",
+                        "",
+                        "Hello World!");
+                }
+                await server.StopAsync();
+            }
+        }
+
+        [Fact]
+        public async Task CanFlushAsyncWithConnectionAdapterPipeWriter()
+        {
+            var listenOptions = new ListenOptions(new IPEndPoint(IPAddress.Loopback, 0))
+            {
+                ConnectionAdapters = { new PassThroughConnectionAdapter() }
+            };
+
+            var serviceContext = new TestServiceContext(LoggerFactory);
+
+            using (var server = new TestServer(async context =>
+            {
+                await context.Response.BodyPipe.WriteAsync(Encoding.ASCII.GetBytes("Hello "));
+                await context.Response.BodyPipe.FlushAsync();
+                await context.Response.BodyPipe.WriteAsync(Encoding.ASCII.GetBytes("World!"));
             }, serviceContext, listenOptions))
             {
                 using (var connection = server.CreateConnection())

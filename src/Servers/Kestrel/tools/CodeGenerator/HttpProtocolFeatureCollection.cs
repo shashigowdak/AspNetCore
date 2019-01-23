@@ -13,6 +13,7 @@ namespace CodeGenerator
             {
                 "IHttpRequestFeature",
                 "IHttpResponseFeature",
+                "IResponseBodyPipeFeature",
                 "IHttpRequestIdentifierFeature",
                 "IServiceProvidersFeature",
                 "IHttpRequestLifetimeFeature",
@@ -59,6 +60,7 @@ namespace CodeGenerator
             {
                 "IHttpRequestFeature",
                 "IHttpResponseFeature",
+                "IResponseBodyPipeFeature",
                 "IHttpUpgradeFeature",
                 "IHttpRequestIdentifierFeature",
                 "IHttpRequestLifetimeFeature",
@@ -66,7 +68,7 @@ namespace CodeGenerator
                 "IHttpMaxRequestBodySizeFeature",
                 "IHttpBodyControlFeature",
             };
-
+            
             var usings = $@"
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.Features.Authentication;
