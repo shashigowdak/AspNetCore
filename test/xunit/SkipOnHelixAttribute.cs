@@ -16,7 +16,7 @@ namespace Microsoft.AspNetCore.Testing.xunit
         {
             get
             {
-                return string.Compare(Environment.GetEnvironmentVariable("helix"), "true", ignoreCase: true) == 0;
+                return !string.Equals(Environment.GetEnvironmentVariable("helix"), "true", StringComparison.OrdinalIgnoreCase);
             }
         }
 
