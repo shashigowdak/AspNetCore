@@ -37,6 +37,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         private readonly PipeWriter _pipeWriter;
 
         // internal memory abstraction
+        // This needs to be a linked list
+        // because we need to allocate multiple segments per write.
         private List<CompletedBuffer> _completedSegments;
         private Memory<byte> _currentSegment;
         private IMemoryOwner<byte> _currentSegmentOwner;
@@ -138,7 +140,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         {
             if (!_hasWrittenResponseHeader)
             {
-                if (_currentSegment.IsEmpty) // TODO confirm this
+                if (_currentSegment.IsEmpty)
                 {
                     throw new InvalidOperationException("No writing operation. Make sure GetMemory() was called.");
                 }
@@ -205,7 +207,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                 _hasWrittenResponseHeader = true;
                 _autoChunk = autoChunk;
 
-                // TODO this can be simplified, I'm just trying to see if this works
+                // TODO this is going to be complex.
                 if (_completedSegments != null)
                 {
                     for (var i = 0; i < _completedSegments.Count; i++)
@@ -217,9 +219,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                             {
                                 var bufferWriter = new BufferWriter<PipeWriter>(_pipeWriter);
                                 bufferWriter.WriteBeginChunkBytes(segment.Length);
-                                bufferWriter.Write(segment.Buffer.Span.Slice(segment.Length)); // TODO the size may be incorrect here.
+                                bufferWriter.Write(segment.Buffer.Span.Slice(0, segment.Length));
                                 bufferWriter.WriteEndChunkBytes();
-                                writer.Commit();
+                                bufferWriter.Commit();
                                 _unflushedBytes += bufferWriter.BytesCommitted;
                             }
                             segment.Return();
@@ -373,7 +375,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             }
 
             // Get a new buffer using the minimum segment size, unless the size hint is larger than a single segment.
-            _currentSegmentOwner = _pool.Rent(Math.Max(_minimumSegmentSize, sizeHint));
+            _currentSegmentOwner = _pool.Rent(Math.Min(Math.Max(_minimumSegmentSize, sizeHint), _pool.MaxBufferSize));
             _currentSegment = _currentSegmentOwner.Memory;
             _position = 0;
         }

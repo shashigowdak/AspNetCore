@@ -487,6 +487,102 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
                 await server.StopAsync();
             }
         }
+
+        [Fact]
+        public async Task ChunksWithGetMemoryLargeNumberOfWritesBeforeFirstFlush()
+        {
+            var testContext = new TestServiceContext(LoggerFactory);
+
+            using (var server = new TestServer(async httpContext =>
+            {
+                var response = httpContext.Response;
+
+                var memory = response.BodyPipe.GetMemory(5000); // This will return 4096
+                var fisrtPartOfResponse = Encoding.ASCII.GetBytes(new string('a', memory.Length));
+                fisrtPartOfResponse.CopyTo(memory);
+                response.BodyPipe.Advance(memory.Length);
+
+                memory = response.BodyPipe.GetMemory();
+                var secondPartOfResponse = Encoding.ASCII.GetBytes("World!");
+                secondPartOfResponse.CopyTo(memory);
+                response.BodyPipe.Advance(6);
+
+                await response.BodyPipe.FlushAsync();
+            }, testContext))
+            {
+                using (var connection = server.CreateConnection())
+                {
+                    await connection.Send(
+                        "GET / HTTP/1.1",
+                        "Host: ",
+                        "",
+                        "");
+                    await connection.Receive(
+                        "HTTP/1.1 200 OK",
+                        $"Date: {testContext.DateHeaderValue}",
+                        "Transfer-Encoding: chunked",
+                        "",
+                        "1000",
+                        new string('a', 4096),
+                        "6",
+                        "World!",
+                        "0",
+                        "",
+                        "");
+                }
+
+                await server.StopAsync();
+            }
+        }
+
+        [Fact]
+        public async Task ChunksWithGetMemoryWithInitialFlushWorks()
+        {
+            var testContext = new TestServiceContext(LoggerFactory);
+
+            using (var server = new TestServer(async httpContext =>
+            {
+                var response = httpContext.Response;
+
+                await response.BodyPipe.FlushAsync();
+
+                var memory = response.BodyPipe.GetMemory(5000); // This will return 4096
+                var fisrtPartOfResponse = Encoding.ASCII.GetBytes(new string('a', memory.Length));
+                fisrtPartOfResponse.CopyTo(memory);
+                response.BodyPipe.Advance(memory.Length);
+
+                memory = response.BodyPipe.GetMemory();
+                var secondPartOfResponse = Encoding.ASCII.GetBytes("World!");
+                secondPartOfResponse.CopyTo(memory);
+                response.BodyPipe.Advance(6);
+
+                await response.BodyPipe.FlushAsync();
+            }, testContext))
+            {
+                using (var connection = server.CreateConnection())
+                {
+                    await connection.Send(
+                        "GET / HTTP/1.1",
+                        "Host: ",
+                        "",
+                        "");
+                    await connection.Receive(
+                        "HTTP/1.1 200 OK",
+                        $"Date: {testContext.DateHeaderValue}",
+                        "Transfer-Encoding: chunked",
+                        "",
+                        "1000",
+                        new string('a', 4096),
+                        "6",
+                        "World!",
+                        "0",
+                        "",
+                        "");
+                }
+
+                await server.StopAsync();
+            }
+        }
     }
 }
 
