@@ -11,7 +11,7 @@ namespace Microsoft.AspNetCore.Components
     /// </summary>
     public readonly struct EventHandlerInvoker
     {
-        private readonly MulticastDelegate _delegate;
+        public static readonly EventHandlerInvokerFactory Factory = new EventHandlerInvokerFactory();
 
         /// <summary>
         /// Creates the new <see cref="EventHandlerInvoker"/>.

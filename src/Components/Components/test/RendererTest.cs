@@ -533,7 +533,7 @@ namespace Microsoft.AspNetCore.Components.Test
             Assert.Same(eventArgs, receivedArgs);
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
         }
-        
+
         [Fact]
         public async Task CanAsyncDispatchEventsToTopLevelComponents()
         {
@@ -715,6 +715,160 @@ namespace Microsoft.AspNetCore.Components.Test
             await task;
 
             Assert.Equal(2, state);
+        }
+
+        // The delegate target points to the outer component
+        [Fact]
+        public async Task EventDispatching_DelegateParameter_MethodToDelegateConversion()
+        {
+            // Arrange
+            var outerStateChangeCount = 0;
+
+            var renderer = new TestRenderer();
+            var parentComponent = new OuterEventComponent();
+            parentComponent.RenderFragment = (builder) =>
+            {
+                builder.OpenComponent<EventComponent>(0);
+                builder.AddAttribute(1, nameof(EventComponent.OnClickAction), parentComponent.SomeMethod);
+                builder.CloseComponent();
+            };
+            parentComponent.OnStateChange = () =>
+            {
+                outerStateChangeCount++;
+            };
+
+            var parentComponentId = renderer.AssignRootComponentId(parentComponent);
+            parentComponent.TriggerRender();
+
+            var eventHandlerId = renderer.Batches[0]
+                .ReferenceFrames
+                .First(frame => frame.AttributeName == "onclickaction")
+                .AttributeEventHandlerId;
+
+            // Act
+            var eventArgs = new UIMouseEventArgs();
+            await renderer.DispatchEventAsync(eventHandlerId, eventArgs);
+
+            // Assert
+            Assert.Equal(1, parentComponent.SomeMethodCallCount);
+            Assert.Equal(1, outerStateChangeCount);
+        }
+
+        // The delegate target points to null
+        [Fact]
+        public async Task EventDispatching_DelegateParameter_NoTargetLambda()
+        {
+            // Arrange
+            var outerStateChangeCount = 0;
+
+            var renderer = new TestRenderer();
+            var parentComponent = new OuterEventComponent();
+            parentComponent.RenderFragment = (builder) =>
+            {
+                builder.OpenComponent<EventComponent>(0);
+                builder.AddAttribute(1, nameof(EventComponent.OnClickAction), () =>
+                {
+                    parentComponent.SomeMethod();
+                });
+                builder.CloseComponent();
+            };
+            parentComponent.OnStateChange = () =>
+            {
+                outerStateChangeCount++;
+            };
+
+            var parentComponentId = renderer.AssignRootComponentId(parentComponent);
+            parentComponent.TriggerRender();
+
+            var eventHandlerId = renderer.Batches[0]
+                .ReferenceFrames
+                .First(frame => frame.AttributeName == "onclickaction")
+                .AttributeEventHandlerId;
+
+            // Act
+            var eventArgs = new UIMouseEventArgs();
+            await renderer.DispatchEventAsync(eventHandlerId, eventArgs);
+
+            // Assert
+            Assert.Equal(1, parentComponent.SomeMethodCallCount);
+            Assert.Equal(0, outerStateChangeCount);
+        }
+
+        // The delegate target points to the outer component
+        [Fact]
+        public async Task EventDispatching_EventHandlerInvoker_MethodToDelegateConversion()
+        {
+            // Arrange
+            var outerStateChangeCount = 0;
+
+            var renderer = new TestRenderer();
+            var parentComponent = new OuterEventComponent();
+            parentComponent.RenderFragment = (builder) =>
+            {
+                builder.OpenComponent<EventComponent>(0);
+                builder.AddAttribute(1, nameof(EventComponent.OnClickAction), EventHandlerInvoker.Factory.CreateDelegate(parentComponent, (Action)parentComponent.SomeMethod));
+                builder.CloseComponent();
+            };
+            parentComponent.OnStateChange = () =>
+            {
+                outerStateChangeCount++;
+            };
+
+            var parentComponentId = renderer.AssignRootComponentId(parentComponent);
+            parentComponent.TriggerRender();
+
+            var eventHandlerId = renderer.Batches[0]
+                .ReferenceFrames
+                .First(frame => frame.AttributeName == "onclickaction")
+                .AttributeEventHandlerId;
+
+            // Act
+            var eventArgs = new UIMouseEventArgs();
+            await renderer.DispatchEventAsync(eventHandlerId, eventArgs);
+
+            // Assert
+            Assert.Equal(1, parentComponent.SomeMethodCallCount);
+            Assert.Equal(1, outerStateChangeCount);
+        }
+
+        // The delegate target points to null
+        [Fact]
+        public async Task EventDispatching_EventHandlerInvoker_NoTargetLambda()
+        {
+            // Arrange
+            var outerStateChangeCount = 0;
+
+            var renderer = new TestRenderer();
+            var parentComponent = new OuterEventComponent();
+            parentComponent.RenderFragment = (builder) =>
+            {
+                builder.OpenComponent<EventComponent>(0);
+                builder.AddAttribute(1, nameof(EventComponent.OnClickAction), EventHandlerInvoker.Factory.CreateDelegate(parentComponent, (Action)(() =>
+                {
+                    parentComponent.SomeMethod();
+                })));
+                builder.CloseComponent();
+            };
+            parentComponent.OnStateChange = () =>
+            {
+                outerStateChangeCount++;
+            };
+
+            var parentComponentId = renderer.AssignRootComponentId(parentComponent);
+            parentComponent.TriggerRender();
+
+            var eventHandlerId = renderer.Batches[0]
+                .ReferenceFrames
+                .First(frame => frame.AttributeName == "onclickaction")
+                .AttributeEventHandlerId;
+
+            // Act
+            var eventArgs = new UIMouseEventArgs();
+            await renderer.DispatchEventAsync(eventHandlerId, eventArgs);
+
+            // Assert
+            Assert.Equal(1, parentComponent.SomeMethodCallCount);
+            Assert.Equal(1, outerStateChangeCount);
         }
 
         [Fact]
@@ -1971,6 +2125,41 @@ namespace Microsoft.AspNetCore.Components.Test
                     builder.CloseElement();
                 }
             }
+        }
+
+        private class OuterEventComponent : IComponent, IHandleStateChange
+        {
+            private RenderHandle _renderHandle;
+
+            public RenderFragment RenderFragment { get; set; }
+
+            public Action OnStateChange { get; set; }
+
+            public int SomeMethodCallCount { get; set; }
+
+            public void SomeMethod()
+            {
+                SomeMethodCallCount++;
+            }
+
+            public void Configure(RenderHandle renderHandle)
+            {
+                _renderHandle = renderHandle;
+            }
+
+            public Task HandleStateChangeAsync(Task task)
+            {
+                OnStateChange?.Invoke();
+                return task;
+            }
+
+            public Task SetParametersAsync(ParameterCollection parameters)
+            {
+                TriggerRender();
+                return Task.CompletedTask;
+            }
+
+            public void TriggerRender() => _renderHandle.Render(RenderFragment);
         }
 
         private void AssertStream(int expectedId, (int id, NestedAsyncComponent.EventType @event)[] logStream)
