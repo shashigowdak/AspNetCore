@@ -29,6 +29,7 @@
     <HelixBuild>private-$(USERNAME)</HelixBuild>
     <HelixBuild Condition=" '$(CI)' == 'true' ">$(BUILD_BUILDNUMBER)</HelixBuild>
     <WaitForWorkItemCompletion>true</WaitForWorkItemCompletion>
+    <FailOnMissionControlTestFailure>true</FailOnMissionControlTestFailure>
     <IsExternal>true</IsExternal>
     <Creator>aspnetcore</Creator>
 
