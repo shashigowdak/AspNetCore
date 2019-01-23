@@ -58,7 +58,8 @@ namespace Microsoft.AspNetCore.ApiAuthorization.IdentityServer.Configuration
             Assert.Equal("Couldn't find a valid certificate with subject 'Invalid' on the 'CurrentUser\\My'", exception.Message);
         }
 
-        [ConditionalFact] // https://github.com/aspnet/AspNetCore/issues/6720
+        [ConditionalFact] 
+        [SkipOnHelix] // https://github.com/aspnet/AspNetCore/issues/6720
         [OSSkipCondition(OperatingSystems.MacOSX)]
         public static void LoadFromStoreCert_SkipsCertificatesNotYetValid()
         {
@@ -81,7 +82,8 @@ namespace Microsoft.AspNetCore.ApiAuthorization.IdentityServer.Configuration
             }
         }
 
-        [ConditionalFact] // https://github.com/aspnet/AspNetCore/issues/6720
+        [ConditionalFact] 
+        [SkipOnHelix] // https://github.com/aspnet/AspNetCore/issues/6720
         [OSSkipCondition(OperatingSystems.MacOSX)]
         public static void LoadFromStoreCert_PrefersCertificatesCloserToExpirationDate()
         {
@@ -104,7 +106,8 @@ namespace Microsoft.AspNetCore.ApiAuthorization.IdentityServer.Configuration
             }
         }
 
-        [ConditionalFact] // https://github.com/aspnet/AspNetCore/issues/6720
+        [ConditionalFact] 
+        [SkipOnHelix] // https://github.com/aspnet/AspNetCore/issues/6720
         [OSSkipCondition(OperatingSystems.MacOSX)]
         public static void LoadFromStoreCert_SkipsExpiredCertificates()
         {

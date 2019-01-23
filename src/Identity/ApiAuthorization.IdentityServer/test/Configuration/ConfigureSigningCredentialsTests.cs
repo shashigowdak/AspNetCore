@@ -22,7 +22,8 @@ namespace Microsoft.AspNetCore.ApiAuthorization.IdentityServer
             UnsafeEphemeralKeySet : (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? X509KeyStorageFlags.PersistKeySet :
             X509KeyStorageFlags.DefaultKeySet);
 
-        [ConditionalFact] // https://github.com/aspnet/AspNetCore/issues/6720
+        [ConditionalFact] 
+        [SkipOnHelix] // https://github.com/aspnet/AspNetCore/issues/6720
         [FrameworkSkipCondition(RuntimeFrameworks.CLR)]
         public void Configure_AddsDevelopmentKeyFromConfiguration()
         {
@@ -62,7 +63,8 @@ namespace Microsoft.AspNetCore.ApiAuthorization.IdentityServer
             }
         }
 
-        [ConditionalFact] // https://github.com/aspnet/AspNetCore/issues/6720
+        [ConditionalFact]
+        [SkipOnHelix] // https://github.com/aspnet/AspNetCore/issues/6720
         [OSSkipCondition(OperatingSystems.MacOSX)]
         public void Configure_LoadsPfxCertificateCredentialFromConfiguration()
         {
