@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.Browser;
 using Microsoft.AspNetCore.Components.Browser.Rendering;
 using Microsoft.AspNetCore.SignalR;
@@ -16,7 +17,7 @@ namespace Microsoft.AspNetCore.Components.Server.Circuits
     public class CircuitHostTest
     {
         [Fact]
-        public void Dispose_DisposesResources()
+        public async Task DisposeAsync_DisposesResources()
         {
             // Arrange
             var serviceScope = new Mock<IServiceScope>();
@@ -32,10 +33,10 @@ namespace Microsoft.AspNetCore.Components.Server.Circuits
                 clientProxy,
                 syncContext);
 
-            var circuitHost = new CircuitHost(serviceScope.Object, clientProxy, renderRegistry, remoteRenderer, configure: _ => { }, jsRuntime: jsRuntime, synchronizationContext: syncContext);
+            var circuitHost = new CircuitHost(serviceScope.Object, clientProxy, renderRegistry, remoteRenderer, configure: _ => { }, jsRuntime: jsRuntime, synchronizationContext: syncContext, new Circuit("some-id"), CircuitHandler.NullHandler);
 
             // Act
-            circuitHost.Dispose();
+            await circuitHost.DisposeAsync();
 
             // Assert
             serviceScope.Verify(s => s.Dispose(), Times.Once());

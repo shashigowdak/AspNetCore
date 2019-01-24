@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.Components.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.JSInterop;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -24,7 +23,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns>The <see cref="IServiceCollection"/>.</returns>
         public static IServiceCollection AddRazorComponents(
             this IServiceCollection services,
-            Type startupType)
+            Type startupType,
+            Action<ComponentsServerOptions> configureOptions = null)
         {
             if (services == null)
             {
@@ -36,7 +36,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(startupType));
             }
 
-            return AddRazorComponentsCore(services, startupType);
+            return AddRazorComponentsCore(services, startupType, configureOptions);
         }
 
         /// <summary>
@@ -46,19 +46,21 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TStartup">A Components app startup type.</typeparam>
         /// <returns>The <see cref="IServiceCollection"/>.</returns>
         public static IServiceCollection AddRazorComponents<TStartup>(
-            this IServiceCollection services)
+            this IServiceCollection services,
+            Action<ComponentsServerOptions> configureOptions = null)
         {
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
 
-            return AddRazorComponentsCore(services, typeof(TStartup));
+            return AddRazorComponentsCore(services, typeof(TStartup), configureOptions);
         }
 
         private static IServiceCollection AddRazorComponentsCore(
             IServiceCollection services,
-            Type startupType)
+            Type startupType,
+            Action<ComponentsServerOptions> configureOptions)
         {
             AddStandardRazorComponentsServices(services);
 
@@ -72,9 +74,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 // Configure the circuit factory to call a startup action when each
                 // incoming connection is established. The startup action is "call
                 // TStartup's Configure method".
-                services.Configure<DefaultCircuitFactoryOptions>(circuitFactoryOptions =>
+                services.Configure<ComponentsServerOptions>(circuitFactoryOptions =>
                 {
-                    var endpoint = BlazorHub.DefaultPath; // TODO: allow configuring this
+                    var endpoint = ComponentsHub.DefaultPath; // TODO: allow configuring this
                     if (circuitFactoryOptions.StartupActions.ContainsKey(endpoint))
                     {
                         throw new InvalidOperationException(
@@ -89,6 +91,11 @@ namespace Microsoft.Extensions.DependencyInjection
                 });
             }
 
+            if (configureOptions != null)
+            {
+                services.Configure(configureOptions);
+            }
+
             return services;
         }
 
@@ -99,9 +106,9 @@ namespace Microsoft.Extensions.DependencyInjection
             // Components entrypoints, this lot is the same and repeated registrations are a no-op.
             services.TryAddSingleton<CircuitFactory, DefaultCircuitFactory>();
             services.TryAddScoped<ICircuitAccessor, DefaultCircuitAccessor>();
-            services.TryAddScoped<Circuit>(s => s.GetRequiredService<ICircuitAccessor>().Circuit);
+            services.TryAddScoped(s => s.GetRequiredService<ICircuitAccessor>().Circuit);
             services.TryAddScoped<IJSRuntimeAccessor, DefaultJSRuntimeAccessor>();
-            services.TryAddScoped<IJSRuntime>(s => s.GetRequiredService<IJSRuntimeAccessor>().JSRuntime);
+            services.TryAddScoped(s => s.GetRequiredService<IJSRuntimeAccessor>().JSRuntime);
             services.TryAddScoped<IUriHelper, RemoteUriHelper>();
 
             // We've discussed with the SignalR team and believe it's OK to have repeated

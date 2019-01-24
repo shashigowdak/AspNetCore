@@ -13,9 +13,9 @@ using Microsoft.Extensions.Logging;
 namespace Microsoft.AspNetCore.Components.Server
 {
     /// <summary>
-    /// A SignalR hub that accepts connections to a Server-Side Blazor app.
+    /// A SignalR hub that accepts connections to a ASP.NET Core Components WebApp.
     /// </summary>
-    public sealed class BlazorHub : Hub
+    public sealed class ComponentsHub : Hub
     {
         private static readonly object CircuitKey = new object();
         private readonly CircuitFactory _circuitFactory;
@@ -25,18 +25,27 @@ namespace Microsoft.AspNetCore.Components.Server
         /// Intended for framework use only. Applications should not instantiate
         /// this class directly.
         /// </summary>
-        public BlazorHub(
-            ILogger<BlazorHub> logger,
-            IServiceProvider services)
+        public ComponentsHub(
+            IServiceProvider services,
+            ILogger<ComponentsHub> logger)
+            : this(
+                  services.GetRequiredService<CircuitFactory>(),
+                  logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _circuitFactory = services.GetRequiredService<CircuitFactory>();
+        }
+
+        internal ComponentsHub(
+            CircuitFactory factory,
+            ILogger logger)
+        {
+            _circuitFactory = factory;
+            _logger = logger;
         }
 
         /// <summary>
         /// Gets the default endpoint path for incoming connections.
         /// </summary>
-        public static PathString DefaultPath => "/_blazor";
+        public static PathString DefaultPath { get; } = "/_blazor";
 
         private CircuitHost CircuitHost
         {
@@ -47,10 +56,9 @@ namespace Microsoft.AspNetCore.Components.Server
         /// <summary>
         /// Intended for framework use only. Applications should not call this method directly.
         /// </summary>
-        public override Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception exception)
         {
-            CircuitHost.Dispose();
-            return base.OnDisconnectedAsync(exception);
+            await CircuitHost.DisposeAsync();
         }
 
         /// <summary>
@@ -66,7 +74,8 @@ namespace Microsoft.AspNetCore.Components.Server
 
             // If initialization fails, this will throw. The caller will explode if they
             // try to call into any interop API.
-            await circuitHost.InitializeAsync();
+            await circuitHost.InitializeAsync(Context.ConnectionAborted);
+
             CircuitHost = circuitHost;
         }
 

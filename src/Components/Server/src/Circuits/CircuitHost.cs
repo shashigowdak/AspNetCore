@@ -14,9 +14,12 @@ using Microsoft.JSInterop;
 
 namespace Microsoft.AspNetCore.Components.Server.Circuits
 {
-    internal class CircuitHost : IDisposable
+    internal class CircuitHost : IAsyncDisposable
     {
         private static readonly AsyncLocal<CircuitHost> _current = new AsyncLocal<CircuitHost>();
+        private readonly IServiceScope _scope;
+        private Action<IComponentsApplicationBuilder> _configure;
+        private bool _isInitialized;
 
         /// <summary>
         /// Gets the current <see cref="Circuit"/>, if any.
@@ -37,14 +40,11 @@ namespace Microsoft.AspNetCore.Components.Server.Circuits
         {
             _current.Value = circuitHost ?? throw new ArgumentNullException(nameof(circuitHost));
 
-            Microsoft.JSInterop.JSRuntime.SetCurrentJSRuntime(circuitHost.JSRuntime);
+            JSInterop.JSRuntime.SetCurrentJSRuntime(circuitHost.JSRuntime);
             RendererRegistry.SetCurrentRendererRegistry(circuitHost.RendererRegistry);
         }
 
         public event UnhandledExceptionEventHandler UnhandledException;
-
-        private bool _isInitialized;
-        private Action<IComponentsApplicationBuilder> _configure;
 
         public CircuitHost(
             IServiceScope scope,
@@ -53,9 +53,11 @@ namespace Microsoft.AspNetCore.Components.Server.Circuits
             RemoteRenderer renderer,
             Action<IComponentsApplicationBuilder> configure,
             IJSRuntime jsRuntime,
-            CircuitSynchronizationContext synchronizationContext)
+            CircuitSynchronizationContext synchronizationContext,
+            Circuit circuit,
+            CircuitHandler circuitHandler)
         {
-            Scope = scope ?? throw new ArgumentNullException(nameof(scope));
+            _scope = scope ?? throw new ArgumentNullException(nameof(scope));
             Client = client ?? throw new ArgumentNullException(nameof(client));
             RendererRegistry = rendererRegistry ?? throw new ArgumentNullException(nameof(rendererRegistry));
             Renderer = renderer ?? throw new ArgumentNullException(nameof(renderer));
@@ -65,7 +67,8 @@ namespace Microsoft.AspNetCore.Components.Server.Circuits
 
             Services = scope.ServiceProvider;
 
-            Circuit = new Circuit(this);
+            Circuit = circuit;
+            CircuitHandler = circuitHandler;
 
             Renderer.UnhandledException += Renderer_UnhandledException;
             SynchronizationContext.UnhandledException += SynchronizationContext_UnhandledException;
@@ -81,19 +84,21 @@ namespace Microsoft.AspNetCore.Components.Server.Circuits
 
         public RendererRegistry RendererRegistry { get; }
 
-        public IServiceScope Scope { get; }
-
         public IServiceProvider Services { get; }
 
         public CircuitSynchronizationContext SynchronizationContext { get; }
 
-        public async Task InitializeAsync()
+        public CircuitHandler CircuitHandler { get; }
+
+        public CancellationToken ConnectionAborted { get; }
+
+        public async Task InitializeAsync(CancellationToken cancellationToken)
         {
-            await SynchronizationContext.Invoke(() =>
+            await SynchronizationContext.InvokeAsync(async () =>
             {
                 SetCurrentCircuitHost(this);
 
-                var builder = new ServerSideBlazorApplicationBuilder(Services);
+                var builder = new ServerSideComponentsApplicationBuilder(Services);
 
                 _configure(builder);
 
@@ -102,6 +107,9 @@ namespace Microsoft.AspNetCore.Components.Server.Circuits
                     var entry = builder.Entries[i];
                     Renderer.AddComponent(entry.componentType, entry.domElementSelector);
                 }
+
+                await CircuitHandler.OnCircuitOpenedAsync(Circuit, cancellationToken);
+                await CircuitHandler.OnConnectionUpAsync(Circuit, cancellationToken);
             });
 
             _isInitialized = true;
@@ -126,9 +134,15 @@ namespace Microsoft.AspNetCore.Components.Server.Circuits
             }
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            Scope.Dispose();
+            await SynchronizationContext.InvokeAsync(async () =>
+            {
+                await CircuitHandler.OnConnectionDownAsync(Circuit, default);
+                await CircuitHandler.OnCircuitClosedAsync(Circuit, default);
+            });
+
+            _scope.Dispose();
             Renderer.Dispose();
         }
 
