@@ -1506,7 +1506,7 @@ namespace Microsoft.AspNetCore.SignalR.Tests
             }
         }
 
-        [Theory]
+        [Theory(Skip = "https://github.com/aspnet/AspNetCore-Internal/issues/1713")]
         [MemberData(nameof(HubTypes))]
         public async Task SendToOthersInGroup(Type hubType)
         {
@@ -2832,7 +2832,7 @@ namespace Microsoft.AspNetCore.SignalR.Tests
                 }
             }
         }
-        
+
         [Fact]
         public async Task ServerReportsProtocolMinorVersion()
         {
