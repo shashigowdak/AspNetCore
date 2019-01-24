@@ -6,6 +6,18 @@
     <MicrosoftNETCoreDotNetAppHostPackageVersion>2.1.7</MicrosoftNETCoreDotNetAppHostPackageVersion>
  </PropertyGroup>
 
+ <PropertyGroup Label="Package Versions: Pinned">
+    <!--
+      The Razor Design \ Extensions package provide build assets (targets and tasks). A "Reference" \ "ProjectReference" does not
+      flow build assets, making it difficult to convert existing PackageReferences. These properties are listed to allow projects to reference these as packages.
+
+      Note that this section appears before DotNetPackageVersionPropsPath import. This allows GeneratedPackageVersionPropsPath to override it with current
+      version values when available.
+     -->
+    <MicrosoftAspNetCoreRazorDesignPackageVersion>2.1.1</MicrosoftAspNetCoreRazorDesignPackageVersion>
+    <MicrosoftAspNetCoreMvcRazorExtensionsPackageVersion>2.1.1</MicrosoftAspNetCoreMvcRazorExtensionsPackageVersion>
+ </PropertyGroup>
+
   <Import Project="$(DotNetPackageVersionPropsPath)" Condition="'$(DotNetPackageVersionPropsPath)' != ''" />
 
   <PropertyGroup>
@@ -74,13 +86,6 @@
     <MicrosoftExtensionsTypeNameHelperSourcesPackageVersion>2.1.1</MicrosoftExtensionsTypeNameHelperSourcesPackageVersion>
     <MicrosoftExtensionsValueStopwatchSourcesPackageVersion>2.1.1</MicrosoftExtensionsValueStopwatchSourcesPackageVersion>
     <MicrosoftExtensionsWebEncodersPackageVersion>2.1.1</MicrosoftExtensionsWebEncodersPackageVersion>
-
-    <!-- These dependencies are required to build. The need to be used as explicit package references -->
-    <MicrosoftAspNetCoreRazorDesignPackageVersion>2.1.1</MicrosoftAspNetCoreRazorDesignPackageVersion>
-    <MicrosoftAspNetCoreMvcRazorExtensionsPackageVersion>2.1.1</MicrosoftAspNetCoreMvcRazorExtensionsPackageVersion>
-    <MicrosoftAspNetCoreRazorRuntimePackageVersion>2.1.1</MicrosoftAspNetCoreRazorRuntimePackageVersion>
-    <MicrosoftAspNetCoreRazorLanguagePackageVersion>2.1.1</MicrosoftAspNetCoreRazorLanguagePackageVersion>
-    <MicrosoftCodeAnalysisRazorPackageVersion>2.1.1</MicrosoftCodeAnalysisRazorPackageVersion>
 
     <!-- These dependencies are temporary while we refactor package refs into project refs. -->
     <MicrosoftAspNetCoreAspNetCoreModulePackageVersion>2.1.1</MicrosoftAspNetCoreAspNetCoreModulePackageVersion>
