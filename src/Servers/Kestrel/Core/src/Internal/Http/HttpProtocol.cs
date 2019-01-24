@@ -17,7 +17,6 @@ using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
@@ -273,7 +272,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
         public bool HasResponseStarted => _requestProcessingStatus >= RequestProcessingStatus.HeadersCommitted;
 
-        public bool HasResponseFirstFlush => _requestProcessingStatus == RequestProcessingStatus.HeadersFlushed;
+        public bool HasFlushedHeaders => _requestProcessingStatus == RequestProcessingStatus.HeadersFlushed;
 
         protected HttpRequestHeaders HttpRequestHeaders { get; } = new HttpRequestHeaders();
 
@@ -792,11 +791,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private async Task FlushAsyncAwaited(CancellationToken cancellationToken)
-        {
-            await FlushAsyncInternal(cancellationToken);
-        }
-
         private Task FlushAsyncInternal(CancellationToken cancellationToken)
         {
             _requestProcessingStatus = RequestProcessingStatus.HeadersFlushed;
@@ -814,7 +808,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                 // If return is Task.CompletedTask no awaiting is required
                 if (!ReferenceEquals(initializeTask, Task.CompletedTask))
                 {
-                    return InitializeAndWriteAsyncAwaited(initializeTask, data, cancellationToken);
+                    return WriteAsyncAwaited(initializeTask, data, cancellationToken);
                 }
             }
             else
@@ -845,9 +839,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             }
         }
 
-        public async Task InitializeAndWriteAsyncAwaited(Task initializeTask, ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
+        public async Task WriteAsyncAwaited(Task initializeTask, ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
         {
             await initializeTask;
+
             // WriteAsyncAwaited is only called for the first write to the body.
             // Ensure headers are flushed if Write(Chunked)Async isn't called.
             if (_canHaveBody)
@@ -1067,11 +1062,12 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
             if (!HasResponseStarted)
             {
+                ProduceStart(appCompleted: true);
                 return ProduceEndAwaited();
             }
-            else if (!HasResponseFirstFlush)
+            else if (!HasFlushedHeaders)
             {
-                return ProduceEndNoStartAwaited();
+                return ProduceEndAwaited();
             }
 
             return WriteSuffix();
@@ -1080,15 +1076,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         [MethodImpl(MethodImplOptions.NoInlining)]
         private async Task ProduceEndAwaited()
         {
-            ProduceStart(appCompleted: true);
-            await ProduceEndNoStartAwaited();
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private async Task ProduceEndNoStartAwaited()
-        {
-            // Force flush
-            await FlushAsyncAwaited(default(CancellationToken));
+            await FlushAsyncInternal(default);
 
             await WriteSuffix();
         }
@@ -1298,10 +1286,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             {
                 ThrowWritingToResponseBodyNotSupported();
             }
-        }
-        private async Task InitializeTaskAwaited(Task initializeTask)
-        {
-            await initializeTask;
         }
 
         [StackTraceHidden]
