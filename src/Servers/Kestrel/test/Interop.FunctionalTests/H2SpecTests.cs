@@ -24,6 +24,7 @@ namespace Interop.FunctionalTests
     public class H2SpecTests : LoggedTest
     {
         [ConditionalTheory]
+        [SkipOnHelix] // https://github.com/aspnet/AspNetCore/issues/7000
         [MemberData(nameof(H2SpecTestCases))]
         public async Task RunIndividualTestCase(H2SpecTestCase testCase)
         {
