@@ -1,7 +1,7 @@
 <Project DefaultTargets="Test">
 
   <!-- Version included until we get global.json generation to support this SDK. -->
-  <Sdk Name="Microsoft.DotNet.Helix.Sdk" Version="2.0.0-beta.19066.4" />
+  <Sdk Name="Microsoft.DotNet.Helix.Sdk" Version="2.0.0-beta.19073.6" />
 
   <Target Name="Gather" BeforeTargets="Test">
     <ItemGroup>
@@ -28,16 +28,18 @@
     <HelixType>ci</HelixType>
     <HelixBuild>private-$(USERNAME)</HelixBuild>
     <HelixBuild Condition=" '$(CI)' == 'true' ">$(BUILD_BUILDNUMBER)</HelixBuild>
+    <HelixBaseURI>https://helix.int-dot.net/</HelixBaseURI>
     <WaitForWorkItemCompletion>true</WaitForWorkItemCompletion>
     <FailOnMissionControlTestFailure>true</FailOnMissionControlTestFailure>
     <IsExternal>true</IsExternal>
     <Creator>aspnetcore</Creator>
 
     <HelixTargetQueues>
+      pr-windows.10.amd64-addsqlservertowin10q
+      <!-- Ubuntu.1810.Amd64.Open;
       Windows.10.Amd64.Open;
       OSX.1012.Amd64.Open;
       Ubuntu.1604.Amd64.Open;
-      <!-- Ubuntu.1810.Amd64.Open;
       Centos.7.Amd64.Open;
       Debian.8.Amd64.Open;
       Debian.9.Amd64.Open;
